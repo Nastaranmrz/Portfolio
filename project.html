@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Project — Nastaran Mirzaei</title>
+<link rel="icon" href="images/avatar.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Geist:wght@400;500;600;900&family=Vazirmatn:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="arrow" viewBox="0 0 16 16"><path d="M4 12L12 4M12 4H5.5M12 4V10.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+</svg>
+
+<header id="top"></header>
+
+<main id="case"></main>
+
+<footer id="contact"></footer>
+
+<script src="projects.js"></script>
+<script src="common.js"></script>
+<script src="cs-urban.js"></script>
+<script>
+  // Each project's rebuilt case study lives in stories/<id>.js (window.STORIES[id]); load the one for this page
+  const _id = new URLSearchParams(location.search).get("id") || "";
+  if (/^[a-z0-9-]+$/.test(_id)) document.write(`<script src="stories/${_id}.js"><\/script>`);
+</script>
+<script>
+  const P = window.PROJECTS;
+  const id = new URLSearchParams(location.search).get("id");
+  const i = P.findIndex(p => p.id === id);
+  if (i < 0) location.replace("index.html#work");
+  const p = { ...P[i], ...(window.STORIES?.[id] || {}) };
+  const next = P[(i + 1) % P.length];
+
+  document.title = `${p.title} — Nastaran Mirzaei`;
+
+  const paras = arr => (arr || []).map(t => `<p>${esc(t)}</p>`).join("");
+  let blockNo = 0;
+  const block = (title, html) => `
+    <div class="cs-block reveal">
+      <div class="head"><span class="idx">${String(++blockNo).padStart(2, "0")}</span><h2>${esc(title)}</h2></div>
+      <div class="body">${html}</div>
+    </div>`;
+
+  // Case study built from real page parts (text, steps, lists) + individual design exports
+  const list = items => `<ul>${items.map(li => `<li>${esc(li)}</li>`).join("")}</ul>`;
+  const renderStory = b => {
+    if (b.type === "stats") return `<div class="cs-stats reveal">${b.items.map(s => `<div><span class="num">${esc(s.value)}</span><span class="small">${esc(s.label)}</span></div>`).join("")}</div>`;
+    if (b.type === "steps") return block(b.title,
+      (b.intro ? paras(b.intro) : "") +
+      `<ol class="cs-steps">${b.items.map((s, i) => `<li><span class="n">${i + 1}</span><div><h4>${esc(s.title)}</h4><p>${esc(s.text)}</p></div></li>`).join("")}</ol>`);
+    if (b.type === "custom") return `
+      <div class="cs-media reveal">
+        <div class="cs-media-head"><span class="idx">${String(++blockNo).padStart(2, "0")}</span><h2>${esc(b.title)}</h2>${b.note ? `<p>${esc(b.note)}</p>` : ""}</div>
+        ${window.CS_BLOCKS?.[b.render]?.() || ""}
+      </div>`;
+    if (b.type === "media") return `
+      <div class="cs-media reveal">
+        <div class="cs-media-head"><span class="idx">${String(++blockNo).padStart(2, "0")}</span><h2>${esc(b.title)}</h2>${b.note ? `<p>${esc(b.note)}</p>` : ""}</div>
+        <div class="cs-media-grid">
+          ${b.items.map(it => `
+          <figure class="ds-card ${it.span || "full"} ${it.bg || "light"}">
+            ${it.label ? `<figcaption>${esc(it.label)}</figcaption>` : ""}
+            <div class="ds-img"><img src="${esc(it.img)}" alt="${esc(it.label || b.title)}" loading="lazy"></div>
+          </figure>`).join("")}
+        </div>
+      </div>`;
+    // default: text block (paragraphs, optional list, optional closing paragraphs, optional sub-heads)
+    return block(b.title,
+      paras(b.body) + (b.list ? list(b.list) : "") + paras(b.after) +
+      (b.sub || []).map(s => `<h4 class="cs-sub">${esc(s.title)}</h4>${paras(s.body)}${s.list ? list(s.list) : ""}`).join(""));
+  };
+
+  const links = [
+    p.figma && `<a class="btn btn-primary" href="${esc(p.figma)}" target="_blank" rel="noopener">View design in Figma ${ARROW}</a>`,
+    p.live && `<a class="btn btn-secondary" href="${esc(p.live)}" target="_blank" rel="noopener">See it live ${ARROW}</a>`,
+  ].filter(Boolean).join("");
+
+  document.getElementById("case").innerHTML = `
+    <div class="progress" aria-hidden="true"></div>
+
+    <div class="wrap cs-hero">
+      <div class="cs-intro">
+        <a class="link back reveal" href="index.html#work">← All work</a>
+        <div class="cs-pills reveal">
+          <span class="pill accent">${esc(p.year)}</span>
+          <span class="pill">${esc(p.platform)}</span>
+          <span class="pill">${esc(p.industry)}</span>
+        </div>
+        <h1 class="reveal">${esc(p.title)}</h1>
+        <p class="lead reveal">${esc(p.summary)}</p>
+        ${links ? `<div class="cs-cta reveal">${links}</div>` : ""}
+      </div>
+      <div class="cover cs-cover reveal"><img src="${img(p.id, "card")}" alt="${esc(p.title)} — cover"></div>
+    </div>
+
+    <div class="wrap">
+      <div class="cs-meta reveal">
+        <div><span class="small">Role</span><span class="v">${esc(p.role)}</span></div>
+        <div><span class="small">Year</span><span class="v">${esc(p.year)}</span></div>
+        <div><span class="small">Platform</span><span class="v">${esc(p.platform)}</span></div>
+        <div><span class="small">Tools</span><span class="v">${esc(p.tools)}</span></div>
+      </div>
+    </div>
+
+    ${p.story ? `
+    <section class="wrap cs-story">
+      ${p.story.map(renderStory).join("")}
+    </section>` : `
+    <section class="wrap cs-story" style="padding-bottom:0">
+      ${p.overview?.length ? block("Overview", paras(p.overview)) : ""}
+      ${(p.sections || []).map(s => block(s.title,
+          paras(s.body) + (s.list ? `<ul>${s.list.map(li => `<li>${esc(li)}</li>`).join("")}</ul>` : "")
+        )).join("")}
+    </section>
+
+    ${p.stats?.length ? `
+    <section class="wrap" style="padding-bottom:0">
+      <div class="cs-stats reveal">
+        ${p.stats.map(s => `<div><span class="num">${esc(s.value)}</span><span class="small">${esc(s.label)}</span></div>`).join("")}
+      </div>
+    </section>` : ""}
+
+    <section aria-labelledby="design-title">
+      <div class="wrap cs-design-head">
+        <h2 id="design-title" class="reveal">Design</h2>
+        <span class="small reveal">Click an image to view it full size</span>
+      </div>
+      <div class="wrap wrap-wide">
+        <div class="cs-design" style="--design-bg:${esc(p.designBg || "#FFFFFF")}">
+          ${p.screens?.length
+            ? `<nav class="cs-modules reveal" aria-label="Modules">${p.screens.map((s, n) => `<a href="#screen-${n + 1}"><span>${String(n + 1).padStart(2, "0")}</span>${esc(s.bold || s.title)}</a>`).join("")}</nav>`
+              + p.screens.map((s, n) => `
+              <article class="cs-screen reveal" id="screen-${n + 1}">
+                <div class="cs-screen-head">
+                  <span class="idx">${String(n + 1).padStart(2, "0")}</span>
+                  <div>
+                    <h3><strong>${esc(s.bold || "")}</strong> ${esc(s.title || "")}</h3>
+                    ${s.desc ? `<p>${esc(s.desc)}</p>` : ""}
+                  </div>
+                </div>
+                <div class="browser">
+                  <div class="browser-bar" aria-hidden="true"><span class="url"><svg viewBox="0 0 16 16"><path d="M4.5 7V5a3.5 3.5 0 0 1 7 0v2M3.5 7h9v6.5h-9z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>${esc((p.live || "").replace(/^https?:\/\//, "")) || esc(p.title)}</span></div>
+                  <figure><img src="${esc(s.img)}" alt="${esc((s.bold || "") + " " + (s.title || ""))}" loading="lazy"><span class="zoom-hint">Full size ⤢</span></figure>
+                </div>
+              </article>`).join("")
+            : `<figure class="design-full reveal"><img src="${img(p.id, "design")}" alt="${esc(p.title)} — design screens" loading="lazy"><span class="zoom-hint">Full size ⤢</span></figure>`}
+        </div>
+      </div>
+      ${links ? `<div class="wrap"><div class="cs-cta reveal">${links}</div></div>` : ""}
+    </section>`}
+
+    <section class="wrap wrap-wide" style="padding-top:0">
+      <a class="next reveal" href="${projectUrl(next.id)}">
+        <div class="next-text">
+          <span class="small">Next project</span>
+          <h2>${esc(next.title)}</h2>
+          <p class="small">${esc(next.summary)}</p>
+          <span class="go">View case study ${ARROW}</span>
+        </div>
+        <div class="cover"><img src="${img(next.id, "card")}" alt="" loading="lazy"></div>
+      </a>
+    </section>
+
+    <div class="lightbox" role="dialog" aria-modal="true" aria-label="Full size design"><button class="lightbox-close" aria-label="Close">×</button><img alt=""></div>`;
+
+  initPage();
+  scrollTo(0, 0);
+
+  // Reading progress bar
+  const bar = document.querySelector(".progress");
+  const setBar = () => { const h = document.documentElement.scrollHeight - innerHeight; bar.style.transform = `scaleX(${h > 0 ? scrollY / h : 0})`; };
+  addEventListener("scroll", setBar, { passive: true }); setBar();
+
+  // Full-size viewer for design images
+  const lb = document.querySelector(".lightbox"), lbImg = lb.querySelector("img");
+  const closeLb = () => { lb.classList.remove("open"); document.body.classList.remove("no-scroll"); };
+  document.querySelectorAll(".cs-design figure, .ds-card").forEach(f => f.addEventListener("click", () => {
+    const im = f.querySelector("img"); lbImg.src = im.src; lbImg.alt = im.alt;
+    lb.classList.add("open"); lb.scrollTop = 0; document.body.classList.add("no-scroll");
+  }));
+  lb.addEventListener("click", closeLb);
+
+  // Wide diagrams (BPMS): drag with the mouse to scroll sideways
+  document.querySelectorAll("[data-drag]").forEach(el => {
+    let x0 = 0, s0 = 0, down = false;
+    el.addEventListener("pointerdown", e => { if (e.pointerType !== "mouse") return; down = true; x0 = e.clientX; s0 = el.scrollLeft; el.classList.add("dragging"); });
+    addEventListener("pointermove", e => { if (down) el.scrollLeft = s0 - (e.clientX - x0); });
+    addEventListener("pointerup", () => { down = false; el.classList.remove("dragging"); });
+  });
+
+  addEventListener("keydown", e => { if (e.key === "Escape") closeLb(); });
+</script>
+</body>
+</html>
