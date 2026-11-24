@@ -783,6 +783,7 @@ window.STORIES["mehrino"] = {
       .mh-subject{min-height:0;padding:40px 18px 64%}
       .mh-desc{min-height:0;padding-bottom:20px}
       .mh-desc h4{font-size:26px}
+      .mh-desc h4{white-space:normal}.mh-desc h4 small{display:block;margin-top:2px}
       .mh-qmap,.mh-sq{padding:48px 16px 24px}
       .mh-qmap h4,.mh-ct{font-size:24px}
       .mh-qmap h4 small{font-size:16px}

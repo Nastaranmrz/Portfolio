@@ -648,3 +648,8 @@ html,body{overflow-x:clip}
 .cta-card::after{display:none}
 @media (max-width:640px){ .plan-route{display:none} .hero .plan-blocks{opacity:.6} }
 @media (prefers-reduced-motion:reduce){ .plan-route polyline,.plan-route .pin{transition:none} .plan.go .pin{animation:none} }
+@media (max-width:600px){ .hero .hero-bio{text-align:left;hyphens:manual} .cta-status{font-size:13px} }
+@media (max-width:640px){
+  .ds-bento .ds-btns{overflow-x:auto;padding-bottom:6px;-webkit-overflow-scrolling:touch}
+  .ds-bento .ds-btn-row{flex-wrap:nowrap;width:max-content}
+}
