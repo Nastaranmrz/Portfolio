@@ -2,6 +2,7 @@
 window.STORIES = window.STORIES || {};
 window.STORIES["job-search"] = {
   tools: "Figma, Claude",
+  live: "apps/karyar/index.html",
   story: [
     { type: "stats", items: [
       { value: "2 weeks", label: "Project duration (in progress)" },

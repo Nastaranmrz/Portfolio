@@ -1,0 +1,1107 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Service Marketplace — Prototype</title>
+<link rel="icon" href="../../images/avatar.png">
+<style>
+@font-face{font-family:Yekan;src:url(../../Font/IRANYekanXFaNum-Regular.ttf) format("truetype");font-weight:400;font-display:swap}
+@font-face{font-family:Yekan;src:url(../../Font/IRANYekanXFaNum-Medium.ttf) format("truetype");font-weight:500;font-display:swap}
+@font-face{font-family:Yekan;src:url(../../Font/IRANYekanXFaNum-DemiBold.ttf) format("truetype");font-weight:600;font-display:swap}
+@font-face{font-family:Yekan;src:url(../../Font/IRANYekanXFaNum-Bold.ttf) format("truetype");font-weight:700;font-display:swap}
+/* Every screen is laid out on the Figma frame grid (412px wide); positions come straight from the design file.
+   The primary colour is the app's crimson (#DB0C1B) instead of the file's purple. */
+:root{--p:#DB0C1B;--ink:#2E2E2E;--gray:#6B6B6B;--line:#BCBCBC;--bg:#F5F5F5;--white:#FCFCFC;--err:#D92D20;--field-hover:#777;--field-disabled:#D5D5D5;--field-ring:rgba(219,12,27,.14);--focus:#2E2E2E;--halo:0 0 0 4px rgba(46,46,46,.06),0 2px 12px rgba(46,46,46,.08);--ease:cubic-bezier(.22,1,.36,1);--ease-io:cubic-bezier(.65,0,.35,1);--halo-err:0 0 0 4px rgba(217,45,32,.09),0 2px 14px rgba(217,45,32,.12)}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overscroll-behavior:none}
+html{overflow-x:hidden}
+body{direction:ltr;background:#17181B;font-family:Yekan,Tahoma,sans-serif;color:var(--ink);display:flex;align-items:center;justify-content:center;gap:56px;padding:20px}
+button,input,select{font:inherit;color:inherit}
+button{background:none;border:0;cursor:pointer}
+img{display:block}
+
+/* desktop presentation */
+.panel{direction:ltr;font-family:"Segoe UI",system-ui,sans-serif;color:#EDEDED;width:270px;max-height:calc(100vh - 40px);overflow:auto;scrollbar-width:thin;scrollbar-color:#333 transparent}
+.panel a.back{color:#9a9a9a;text-decoration:none;font-size:13px}
+.panel a.back:hover{color:#fff}
+.panel h1{font-size:21px;font-weight:700;margin:12px 0 6px;line-height:1.25}
+.panel p{font-size:12.5px;color:#9a9a9a;line-height:1.55;margin-bottom:6px}
+.panel p b{color:#ddd;font-weight:600}
+.panel h6{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:#6f6f6f;margin:14px 0 4px 12px}
+.panel nav{display:flex;flex-direction:column;gap:1px}
+.panel nav button{display:block;text-align:left;padding:6px 12px;border-radius:8px;color:#cfcfcf;font-size:13px;font-family:inherit}
+.panel nav button:hover{background:#232428}
+.panel nav button.on{background:#2A2C30;color:#fff;box-shadow:inset 3px 0 0 var(--p)}
+.device{width:432px;height:937px;border-radius:56px;background:#0B0B0C;padding:10px;box-shadow:0 30px 80px rgba(0,0,0,.5),inset 0 0 0 2px #2a2a2e;flex:none}
+.app{direction:rtl;position:relative;width:412px;height:917px;border-radius:46px;overflow:hidden;background:var(--bg)}
+
+/* screens */
+.screen{position:absolute;inset:0;display:none;background:var(--bg)}
+.screen.on{display:block;animation:fade .42s var(--ease)}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.grad{background:linear-gradient(180deg,#EFEFEF 0,#FAFAFA 287px,#FAFAFA calc(100% - 68px),#EDEDED 100%)}
+.ztop{position:absolute;top:0;left:0;right:0;z-index:3}
+.zbg{position:absolute;inset:0;z-index:0}
+.bgw{background:#FAFAFA}
+.zbg>*{position:absolute}
+.zbot{position:absolute;bottom:0;left:0;right:0;z-index:3}
+.scroll{position:absolute;left:0;right:0;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;z-index:1}
+.scroll::-webkit-scrollbar{display:none}
+.cv{position:relative;width:412px}
+#thread>*,#stBody>*,#nList>*,.ztop>*,.zbot>*,.zbg>*,.cv>*,.sh>*,.pp>*,.sd>*{position:absolute}
+.t{white-space:nowrap;margin:0}
+.im{max-width:none;pointer-events:none;user-select:none;-webkit-user-drag:none}
+.hs{border-radius:10px;cursor:pointer;z-index:2}
+.hs:active{background:rgba(0,0,0,.05)}
+.bx{z-index:1}
+
+/* components */
+.btn{display:grid;place-items:center;border-radius:10px;background:var(--p);color:#fff;font-size:14px;font-weight:600;box-shadow:0 4px 12px rgba(0,0,0,.1);cursor:pointer;transition:transform .2s var(--ease),background-color .25s var(--ease),color .25s var(--ease);z-index:2}
+.btn:active{transform:scale(.98)}
+.btn.off{background:#E5E5E5;color:#A6A6A6;cursor:default;transform:none}
+.btn.ghost{background:#fff;color:var(--p);border:1px solid var(--p);box-shadow:none}
+.btn.baked{opacity:0;box-shadow:none}
+/* text-field states — one system for .fld / .sbox / .sel / .msgin
+   enabled → hover → focused (typing) → filled · error · disabled · read-only.
+   The background never changes on hover/focus, so floating labels sitting on the border stay seamless;
+   focus = crimson border + a soft, low-opacity halo around the field. */
+.fld,.sbox,.sel{border:1px solid var(--line);transition:border-color .25s var(--ease),box-shadow .3s var(--ease),background-color .25s var(--ease)}
+.fld{border-radius:8px;background:transparent;display:flex;align-items:center;padding:0 12px;gap:8px}
+.fld input{flex:1;min-width:0;height:100%;border:0;outline:0;background:none;font-size:14px;font-weight:500;color:var(--ink);caret-color:var(--focus)}
+.fld input::placeholder,.sbox input::placeholder,.msgin::placeholder{color:#9E9E9E;font-weight:400;opacity:1;transition:color .15s ease}
+/* hover */
+.fld:not(.err):not(.ro):not(.is-disabled):not(:has(input:disabled)):not(:focus-within):hover,
+.sbox:not(.err):not(.is-disabled):not(:has(input:disabled)):not(:focus-within):hover,
+.sel:not(.err):not(.is-disabled):not(:has(select:disabled)):not(:focus-within):hover{border-color:var(--field-hover)}
+/* focused / typing (tappable picker fields count as focused while their sheet is open) */
+.fld:focus-within:not(.err),.fld.is-active:not(.err),.sbox:focus-within,.sel:focus-within:not(.err),.sel.open:not(.err){border-color:var(--focus);box-shadow:var(--halo)}
+.fld:focus-within input::placeholder,.sbox:focus-within input::placeholder{color:#BDBDBD}
+.fld:focus-within+.lgd,.fld.is-active+.lgd{color:var(--ink)!important}
+.fld[role=button]:focus-visible{outline:0;border-color:var(--focus);box-shadow:var(--halo)}
+/* error */
+.fld.err,.sel.err{border-color:var(--err);background-color:#FFF6F6}
+.fld.err:focus-within,.sel.err:focus-within{box-shadow:var(--halo-err)}
+.fld.err+.lgd{color:var(--err)!important}
+.fld.err input{caret-color:var(--err)}
+.fld.err.shake,.sel.err.shake{animation:shake .32s ease}
+@keyframes shake{20%,60%{transform:translateX(-4px)}40%,80%{transform:translateX(4px)}}
+/* disabled */
+.fld:has(input:disabled),.fld.is-disabled,.sbox:has(input:disabled),.sbox.is-disabled,.sel:has(select:disabled),.sel.is-disabled{border-color:#E0E0E0;background:#EFEFEF;box-shadow:none;cursor:not-allowed}
+.fld:has(input:disabled) input,.fld.is-disabled,.sbox:has(input:disabled) input,.sel:has(select:disabled) select{color:#A6A6A6;cursor:not-allowed}
+.fld:has(input:disabled)+.lgd,.fld.is-disabled+.lgd{color:#A6A6A6!important}
+/* read-only (shown, not editable): no hover/focus feedback */
+.fld.ro{cursor:default}
+.lgd{font-size:12px;line-height:22px;color:var(--gray);padding:0 4px;background:#FAFAFA;z-index:2;pointer-events:none;transition:color .15s ease}
+.sel{border-radius:8px;background:var(--white)}
+/* custom dropdown: the native <select> stays in the DOM (value, change events, validation) but is hidden;
+   a button shows the value and a floating listbox menu picks it */
+.sel select{position:absolute;inset:0;width:100%;height:100%;opacity:0;pointer-events:none}
+.sel.open{z-index:30}
+.sel-btn{width:100%;height:100%;display:flex;align-items:center;padding:0 12px 0 40px;font-size:12px;font-weight:500;color:var(--ink);text-align:right;cursor:pointer;border-radius:inherit;outline:0}
+.sel-btn.ph{color:#9E9E9E;font-weight:400}
+.sel-btn:disabled{cursor:not-allowed;color:#A6A6A6}
+.sel img{position:absolute;left:10px;top:50%;margin-top:-9px;width:18px;height:18px;pointer-events:none;transition:transform .35s var(--ease)}
+.sel.open img{transform:rotate(180deg)}
+.sel:has(select:disabled) img{opacity:.4}
+.sel-menu{position:absolute;left:-1px;right:-1px;top:calc(100% + 6px);background:#fff;border-radius:12px;padding:6px;max-height:212px;overflow-y:auto;scrollbar-width:thin;box-shadow:0 14px 34px rgba(46,46,46,.16),0 0 0 1px rgba(46,46,46,.06);opacity:0;visibility:hidden;transform:translateY(-6px) scale(.98);transform-origin:50% 0;transition:opacity .18s ease,transform .25s var(--ease),visibility 0s linear .25s}
+.sel.up .sel-menu{top:auto;bottom:calc(100% + 6px);transform:translateY(6px) scale(.98);transform-origin:50% 100%}
+.sel.open .sel-menu{opacity:1;visibility:visible;transform:none;transition:opacity .22s var(--ease),transform .32s var(--ease)}
+.sel-menu button{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;height:40px;padding:0 12px;border-radius:8px;font-size:13px;color:var(--ink);text-align:right;transition:background-color .12s ease,color .12s ease}
+.sel-menu button+button{margin-top:2px}
+.sel-menu button:hover,.sel-menu button:focus-visible{background:#F6F6F6;outline:0}
+.sel-menu button[aria-selected=true]{background:#FDECEE;color:var(--p);font-weight:700}
+.sel-menu svg{flex:none;width:16px;height:16px;opacity:0;transform:scale(.6);transition:opacity .15s ease,transform .15s ease}
+.sel-menu button[aria-selected=true] svg{opacity:1;transform:none}
+.spin{animation:rot .9s linear infinite}
+@keyframes rot{to{transform:rotate(360deg)}}
+.blurx{backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px);-webkit-mask-image:radial-gradient(closest-side,#000 70%,transparent);mask-image:radial-gradient(closest-side,#000 70%,transparent);z-index:2;pointer-events:none}
+.scan-corners,.scan-code-art{z-index:2;pointer-events:none}
+/* the QR drawn in the background image is ~2px larger than the vector one, so this plate fully covers it (no stray outline) */
+.scan-code-art{display:grid;place-items:center;padding:7px;background:#F5F5F5}
+.scan-code-art img{display:block;width:100%;height:100%;object-fit:contain}
+
+/* otp — same state system as the text fields, per cell:
+   empty → hover → active cell (2px crimson + blinking caret) → filled · error · locked/disabled */
+.otp{display:flex;gap:12px;direction:ltr}
+/* each cell is its own box: hover/focus belong to the single square, not the whole row */
+.otp i{position:relative;width:54px;height:54px;border:1px solid var(--line);border-radius:8px;background:transparent;display:grid;place-items:center;font-style:normal;font-size:24px;font-weight:700;color:var(--ink);cursor:text;transition:border-color .25s var(--ease),background-color .25s var(--ease),box-shadow .3s var(--ease),color .25s var(--ease)}
+.otp i.filled{border-color:#8C8C8C}
+.otp:not(.lock):not(.e) i:not(.cur):hover{border-color:var(--field-hover)}
+.otp i.cur{border-color:var(--focus);box-shadow:var(--halo)}
+.otp i.cur:empty::after{content:"";width:2px;height:24px;border-radius:1px;background:var(--focus);animation:caret 1s steps(1) infinite}
+@keyframes caret{50%{opacity:0}}
+.otp input{position:absolute;inset:0;opacity:0;font-size:16px;pointer-events:none}
+.otp.e i{border-color:var(--err);background:#FFF6F6;color:var(--err);box-shadow:none}
+.otp.e i.cur{box-shadow:var(--halo-err)}
+.otp.lock i{cursor:not-allowed}
+.otp.e i.cur:empty::after{background:var(--err)}
+.otp.e.shake{animation:shake .32s ease}
+.otp.lock{cursor:not-allowed}
+.otp.lock i{border-color:#E0E0E0;background:#EFEFEF;color:#A6A6A6;box-shadow:none}
+.otp.lock i::after{display:none}
+.otp.lock input{pointer-events:none}
+
+/* overlays */
+.ov{position:absolute;inset:0;z-index:20;visibility:hidden;transition:visibility 0s linear .45s}
+.ov.on{visibility:visible;transition:none}
+.ov .scrim{position:absolute;inset:0;background:rgba(0,0,0,.6);opacity:0;transition:opacity .4s var(--ease)}
+.ov.on .scrim{opacity:1}
+.sh{position:absolute;left:0;right:0;bottom:0;width:412px;background:var(--white);border-radius:24px 24px 0 0;transform:translateY(100%);transition:transform .45s cubic-bezier(.32,.72,0,1)}
+.ov.on .sh{transform:none}
+.pp{position:absolute;top:50%;opacity:0;transform:scale(.94) translateY(8px);transition:opacity .3s var(--ease),transform .4s var(--ease);border-radius:24px}
+.ov.on .pp{opacity:1;transform:none}
+.sd{position:absolute;top:0;bottom:0;right:0;width:277px;background:#fff;transform:translateX(100%);transition:transform .45s cubic-bezier(.32,.72,0,1)}
+.ov.on .sd{transform:none}
+.toast{position:absolute;left:50%;bottom:110px;z-index:40;transform:translate(-50%,16px);background:#2E2E2E;color:#fff;font-size:12.5px;padding:11px 16px;border-radius:12px;display:flex;gap:8px;align-items:center;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .35s var(--ease),transform .45s var(--ease);box-shadow:0 10px 24px rgba(0,0,0,.25)}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+
+/* home */
+.tier{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;z-index:2}
+.tier::-webkit-scrollbar{display:none}
+.tier button{flex:none;width:364px;height:74px;scroll-snap-align:center}
+.tier img{width:364px;height:74px}
+.tile{background:var(--white);border-radius:16px;display:grid;place-items:center;cursor:pointer;z-index:2;transition:box-shadow .35s var(--ease),transform .35s var(--ease)}
+.tile:active{transform:scale(.97)}
+.tile svg{width:60%;height:60%;transition:transform .45s var(--ease)}
+.tile:hover{box-shadow:0 8px 20px rgba(219,12,27,.10)}
+.tile:hover svg{transform:translateY(-3px)}
+.rail{background:#EF737C;border-radius:0 16px 16px 0;z-index:2}
+.rail .list{position:absolute;top:39px;left:0;right:15px;height:209px;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;scroll-snap-type:x mandatory}
+.rail .list::-webkit-scrollbar{display:none}
+.rail .list button{flex:none;width:143px;height:209px;scroll-snap-align:start}
+.rail .list img{width:143px;height:209px}
+.rail .all{position:absolute;left:4px;top:6px;width:50px;height:30px;z-index:2}
+
+/* shop */
+.sbox{background:var(--white);border-radius:10px;display:flex;align-items:center;gap:8px;padding:0 10px 0 9px;z-index:2}
+.sbox input{flex:1;min-width:0;border:0;outline:0;background:none;font-size:12px;height:100%}
+.sbox img{width:21px;height:21px;order:2}
+.dd{border:1px solid var(--line);border-radius:8px;background:var(--white);display:flex;align-items:center;justify-content:center;gap:8px;font-size:12px;cursor:pointer;z-index:2}
+.dd img{width:16px;height:16px;order:2}
+.dd.act{border-color:var(--p);color:var(--p)}
+.prodlist{left:0;width:412px;z-index:2}
+.prow{position:absolute;left:0;width:412px;height:152px;cursor:pointer}
+.prow>*{position:absolute}
+.prow .ph{left:268px;top:8px;width:120px;height:120px;border:1px solid #DADADA;border-radius:12px;background:var(--white);overflow:hidden}
+.prow .ph img{position:absolute;left:7px;top:7px;width:103px;height:103px}
+.prow .ln{left:24px;top:144px;width:364px;height:1px;background:#E0E0E0}
+.empty{position:absolute;left:0;right:0;top:40px;text-align:center;color:#888;font-size:13px}
+.cat{width:90px;cursor:pointer}
+.cat .c{width:90px;height:90px;border-radius:50%;overflow:hidden;position:relative}
+.cat .c img{width:90px;height:90px}
+.cat .c::after{content:"";position:absolute;inset:0;border-radius:50%;border:3px solid var(--p);opacity:0;transition:opacity .3s var(--ease)}
+.cat.on .c::after{opacity:1}
+.cat .c img.clip{clip-path:circle(41px at 45px 45px)}
+.cat p{text-align:center;font-size:12px;line-height:22px;margin-top:8px;color:var(--gray)}
+.cat.on p{color:var(--p);font-weight:700}
+.acc{left:0;width:412px}
+.acc>*{display:block;position:relative}
+.acc .h{margin:0 24px;cursor:pointer}
+/* membership cards carousel */
+#cardBg img{position:absolute;left:0;top:0;width:412px;height:917px;opacity:0;transition:opacity .7s var(--ease)}
+#cardBg img.on{opacity:1}
+.cband{overflow:hidden;z-index:1;touch-action:pan-y;cursor:grab;user-select:none}
+.cband:active{cursor:grabbing}
+.cband>svg{position:absolute;left:0;top:0}
+.ctrack{position:absolute;left:0;top:0;width:412px;height:100%;transition:transform .7s var(--ease);will-change:transform}
+.ctrack.drag{transition:none}
+.cslide{position:absolute;top:6px;width:334px;height:245px;border-radius:28px;background-size:412px 917px;background-position:-39px -106px;transition:transform .7s var(--ease),box-shadow .7s var(--ease)}
+.cslide.on{box-shadow:0 12px 16px -10px rgba(0,0,0,.28)}
+.cslide:not(.on){transform:scale(.755)}
+.carr{display:grid;place-items:center;border-radius:50%;background:rgba(255,255,255,.22);-webkit-backdrop-filter:blur(10px) saturate(1.4);backdrop-filter:blur(10px) saturate(1.4);box-shadow:inset 0 0 0 1px rgba(255,255,255,.45),0 4px 12px rgba(0,0,0,.18);cursor:pointer;z-index:3;transition:opacity .35s var(--ease),transform .3s var(--ease),background-color .3s var(--ease),visibility 0s}
+.carr:hover{background:rgba(255,255,255,.38);transform:scale(1.08)}
+.carr:active{transform:scale(.94)}
+.carr:focus-visible{outline:2px solid #fff;outline-offset:2px}
+.carr.off{opacity:0;visibility:hidden;transition:opacity .35s var(--ease),visibility 0s linear .35s}
+.carr svg{width:14px;height:14px}
+.acc .b{overflow:hidden;transition:height .4s var(--ease-io)}
+.acc .b.closed{height:0!important}
+
+/* lists */
+.lst{background:var(--white);border-radius:12px;overflow:hidden;z-index:2}
+.lrow{position:absolute;left:0;width:364px;cursor:pointer}
+.lrow>*{position:absolute}
+.lrow .sep{left:0;right:0;bottom:0;height:1px;background:#EEE}
+.seg{border-radius:8px;border:1px solid var(--line);background:var(--bg);display:grid;place-items:center;font-size:12px;cursor:pointer;z-index:2}
+.seg.on{background:var(--p);border-color:var(--p);color:#fff;font-weight:700;box-shadow:0 4px 10px rgba(219,12,27,.2)}
+.nrow{position:absolute;left:24px;cursor:pointer}
+.nrow img{width:364px;height:69px}
+
+/* chat */
+.chatscroll{background:#F2F2F2 url(img/chat-bg.jpg) center top/412px auto repeat-y}
+.bub{max-width:263px;padding:12px 12px 8px;border-radius:16px;background:#FCE4E6;font-size:14px;line-height:25px;color:var(--ink);white-space:normal;word-wrap:break-word;z-index:2}
+.bub time{display:block;text-align:left;font-size:10.5px;color:#777;margin-top:4px}
+.cbar{background:#E5E5E5;z-index:3}
+.cic{z-index:4;cursor:pointer;border-radius:50%;color:var(--p);transition:transform .25s var(--ease),opacity .25s var(--ease)}
+.cic svg{display:block;width:24px;height:24px}
+.cic:hover{transform:scale(1.1)}
+.cic:active{transform:scale(.92)}
+.cic:focus-visible{outline:2px solid var(--focus);outline-offset:3px}
+#micSend{display:grid}
+#micSend>svg{grid-area:1/1;transition:opacity .25s var(--ease),transform .35s var(--ease)}
+#micSend .i-send{opacity:0;transform:scale(.5) rotate(-30deg)}
+#micSend.has-text .i-mic{opacity:0;transform:scale(.5)}
+#micSend.has-text .i-send{opacity:1;transform:none}
+.msgin{position:absolute;top:16px;left:24px;width:364px;height:46px;border:1px solid var(--line);outline:0;border-radius:23px;background:#FCFCFC;padding:0 48px 0 100px;font-size:14px;color:var(--ink);caret-color:var(--focus);z-index:3;transition:border-color .25s var(--ease),box-shadow .3s var(--ease)}
+.msgin:hover:not(:disabled):not(:focus){border-color:var(--field-hover)}
+.msgin:focus{border-color:var(--focus);box-shadow:var(--halo)}
+.msgin:focus::placeholder{color:#BDBDBD}
+.msgin:disabled{border-color:#E0E0E0;background:#EFEFEF;color:#A6A6A6;cursor:not-allowed}
+.sbox input{caret-color:var(--focus)}
+@media(prefers-reduced-motion:reduce){.fld,.sbox,.sel,.lgd,.fld input::placeholder,.sbox input::placeholder,.msgin,.otp i{transition:none}.shake,.otp i.cur:empty::after{animation:none!important}}
+
+/* wheel + profile */
+.wheel{display:flex;height:135px;z-index:2}
+.wheel .col{flex:1;height:135px;overflow-y:auto;scroll-snap-type:y mandatory;scrollbar-width:none;padding:45px 0;text-align:center}
+.wheel .col::-webkit-scrollbar{display:none}
+.wheel .col div{height:45px;line-height:45px;scroll-snap-align:center;font-size:16px;color:#A3A3A3}
+.wheel .col div.on{color:var(--ink);font-weight:700}
+.wl{height:1px;background:#F6B9BF;z-index:1}
+
+/* mobile: the app fills the screen and is scaled to the phone's width */
+.menu-fab,.sheet{display:none}
+@media (max-width:560px){
+  body{padding:0;display:block;background:var(--bg);overflow:hidden;position:fixed;inset:0;width:100%}
+  .panel{display:none}
+  .device{width:100%;height:100dvh;border-radius:0;padding:0;box-shadow:none;background:none;overflow:hidden}
+  .app{border-radius:0}
+  .menu-fab{display:grid;place-items:center;position:fixed;top:max(4px,env(safe-area-inset-top));right:50%;transform:translateX(50%);z-index:80;height:22px;padding:0 10px;border-radius:11px;background:rgba(0,0,0,.35);color:#fff;font:600 10.5px "Segoe UI",system-ui,sans-serif;direction:ltr;backdrop-filter:blur(6px)}
+  .sheet{display:block;position:fixed;inset:0;z-index:90;background:rgba(0,0,0,.45);opacity:0;visibility:hidden;transition:.2s}
+  .sheet.open{opacity:1;visibility:visible}
+  .sheet .in{position:absolute;left:0;right:0;bottom:0;max-height:80vh;overflow:auto;background:#1E1F22;border-radius:20px 20px 0 0;padding:18px 16px max(20px,env(safe-area-inset-bottom));transform:translateY(100%);transition:transform .25s}
+  .sheet.open .in{transform:none}
+  .sheet .panel{display:block;width:auto;max-height:none}
+}
+</style>
+</head>
+<body>
+
+<aside class="panel" id="panel">
+  <a class="back" href="../../project.html?id=marketplace">← Back to case study</a>
+  <h1>Service Marketplace<br>Interactive prototype</h1>
+  <p>Every screen of the Figma file, rebuilt on the design’s own grid and linked together. Anything that wasn’t designed shows a “not available in this version” notice.</p>
+  <p>Demo verification code: <b>12345</b> (a wrong code shows the error states).</p>
+  <div id="screenNav"></div>
+</aside>
+
+<div class="device"><div class="app" id="app"></div></div>
+
+<button class="menu-fab" id="fab">Screens ▾</button>
+<div class="sheet" id="sheet"><div class="in"></div></div>
+
+<script>
+/* ================= building blocks ================= */
+const NA = "در این نسخه در دسترس نیست";
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const fa = s => String(s).replace(/\d/g, d => "۰۱۲۳۴۵۶۷۸۹"[d]);
+const toEn = s => s.replace(/[۰-۹]/g, d => "۰۱۲۳۴۵۶۷۸۹".indexOf(d)).replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d));
+const JPG = new Set("splash home-body wallet card-1 card-2 card-3 card-4 shop-top shop-mini prod-top st-about order-top chat-bg aboutapp upd-body force-body welcome-body".split(" "));
+const GIF = new Set(["welcome-animation"]);
+const src = n => `img/${n}.${GIF.has(n) ? "gif" : JPG.has(n) ? "jpg" : "png"}`;
+// items use Figma frame coordinates: I = image crop, T = text, B = box, A = hotspot
+const I = (n, x, y, w, h, o = {}) => ({ k: "i", n, x, y, w, h, o });
+const T = (t, x, y, w, h, o = {}) => ({ k: "t", t, x, y, w, h, o });
+const B = (x, y, w, h, o = {}) => ({ k: "b", x, y, w, h, o });
+const A = (x, y, w, h, a, o = {}) => ({ k: "a", x, y, w, h, a, o });
+const BTN = (x, y, w, h, label, a = "", o = {}) => B(x, y, w, h, { cls: "btn " + (o.cls || ""), html: label, a: a + ' role="button" tabindex="0"', id: o.id });
+const NAh = (x, y, w, h) => A(x, y, w, h, "", { cls: "na" });
+const TABS = [["home", 330, 82], ["shop", 247, 83], ["services", 165, 82], ["chats", 82, 83], ["account", 0, 82]];
+const TABBAR = (img, y, act) => [I(img, 0, y, 412, 86), ...TABS.filter(t => t[0] !== act).map(([id, x, w]) => A(x, y, w, 86, `data-go="${id}" data-reset`))];
+
+// 24px line icons in the file's vuesax style (1.5 stroke, ink)
+const SV = (body, extra = "") => `<svg viewBox="0 0 24 24" fill="none" stroke="#2E2E2E" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"${extra}>${body}</svg>`;
+const ICON = {
+  back: SV('<path d="M9.57 5.93L3.5 12l6.07 6.07M20.5 12H3.67"/>', ' width="24" height="24"'),
+  attach: SV('<circle cx="12" cy="12" r="10"/><path d="M12.2 11.8l-1.4 1.4a2 2 0 0 0 2.8 2.8l2.2-2.2a4 4 0 0 0-5.6-5.6l-2.4 2.4a3.4 3.4 0 0 0 4.8 4.8"/>'),
+  emoji: SV('<circle cx="12" cy="12" r="10"/><path d="M8.2 14a4.6 4.6 0 0 0 7.6 0"/>'),
+  mic: SV('<rect x="9" y="2.5" width="6" height="11.5" rx="3" fill="#2E2E2E"/><path d="M5.5 10.5a6.5 6.5 0 0 0 13 0M12 17v4"/>', ' class="i-mic"'),
+  send: `<svg class="i-send" viewBox="0 0 24 24"><path d="M19.5 4.6L4.2 11.2c-.7.3-.7 1.3 0 1.6l15.3 6.6c.7.3 1.4-.4 1.1-1.1L18.4 13 12 12l6.4-1 2.2-5.3c.3-.7-.4-1.4-1.1-1.1z" fill="currentColor"/></svg>`,
+};
+
+const SCAN_CORNERS = `<svg width="320" height="320" viewBox="0 0 320 320" aria-hidden="true">
+  <g fill="#F5F5F5"><rect width="34" height="34"/><rect x="286" width="34" height="34"/><rect y="286" width="34" height="34"/><rect x="286" y="286" width="34" height="34"/></g>
+  <g fill="none" stroke="#303030" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M30 4H12a8 8 0 0 0-8 8v18M290 4h18a8 8 0 0 1 8 8v18M4 290v18a8 8 0 0 0 8 8h18M316 290v18a8 8 0 0 1-8 8h-18"/>
+  </g>
+</svg>`;
+
+function el(it, dx, dy, cw) {
+  const o = it.o, x = it.x - dx, y = it.y - dy;
+  const id = o.id ? ` id="${o.id}"` : "", a = o.a ? " " + o.a : "", cls = o.cls ? " " + o.cls : "";
+  let pos = `top:${y}px;`;
+  if (it.k === "t") {
+    const s = o.s || Math.round(it.h / 1.8 * 2) / 2;
+    const al = o.al || (Math.abs(it.x + it.w / 2 - (dx + cw / 2)) < 4 ? "c" : "r");
+    const st = `font-size:${s}px;line-height:${o.lh || it.h}px;font-weight:${(o.w || 4) * 100};color:${o.c || "var(--ink)"};`;
+    if (o.ml) pos += `left:${x}px;width:${it.w}px;text-align:${al === "c" ? "center" : al === "l" ? "left" : "right"};white-space:normal;`;
+    else if (al === "c") pos += `left:${x + it.w / 2}px;transform:translateX(-50%);`;
+    else if (al === "l") pos += `left:${x}px;`;
+    else pos += `right:${cw - x - it.w}px;`;
+    return `<p class="t${cls}"${id}${a} style="${pos}${st}${o.st || ""}">${it.t}</p>`;
+  }
+  pos += `left:${x}px;width:${it.w}px;height:${it.h}px;`;
+  if (it.k === "i") return `<img class="im${cls}"${id}${a} src="${src(it.n)}" alt="" style="${pos}${o.st || ""}">`;
+  if (it.k === "a") return `<button class="hs${cls}"${id} ${it.a} style="${pos}" aria-label="${o.l || ""}"></button>`;
+  return `<div class="bx${cls}"${id}${a} style="${pos}${o.st || ""}">${o.html || ""}</div>`;
+}
+
+const SCR = [], OVS = [];
+const scr = (id, m, items) => SCR.push({ id, ...m, items });
+const ov = (id, kind, rect, items) => OVS.push({ id, kind, rect, items });
+
+function renderScreen(s) {
+  const H = s.H || 917, top = s.top || 0, bot = s.bot ?? H, bh = H - bot;
+  const z = { t: "", m: "", b: "", g: "" };
+  for (const it of s.items) {
+    const zone = it.o.z || (top && it.y + it.h <= top + .5 ? "t" : bh && it.y >= bot - .5 ? "b" : "m");
+    z[zone] += el(it, 0, zone === "m" ? top : zone === "b" ? bot : 0, 412);
+  }
+  return `<section class="screen ${s.cls || ""}" id="${s.id}" data-title="${s.title}" data-group="${s.group}">
+    ${z.g ? `<div class="zbg">${z.g}</div>` : ""}
+    <div class="scroll ${s.scls || ""}" style="top:${top}px;bottom:${bh}px"><div class="cv" style="height:${bot - top}px">${z.m}</div></div>
+    ${top ? `<div class="ztop" style="height:${top}px">${z.t}</div>` : ""}
+    ${bh ? `<div class="zbot" style="height:${bh}px">${z.b}</div>` : ""}
+  </section>`;
+}
+function renderOv(o) {
+  const [x, y, w, h] = o.rect;
+  let box;
+  if (o.kind === "sheet") box = `<div class="sh" style="height:${h}px">${o.items.map(i => el(i, 0, y, 412)).join("")}</div>`;
+  else if (o.kind === "side") box = `<div class="sd">${o.items.map(i => el(i, x, 0, w)).join("")}</div>`;
+  else box = `<div class="pp" style="left:${x}px;width:${w}px;height:${h}px;margin-top:${-h / 2}px">${o.items.map(i => el(i, x, y, w)).join("")}</div>`;
+  return `<div class="ov" id="ov-${o.id}"><div class="scrim" data-close></div>${box}</div>`;
+}
+
+/* ================= service-tile vectors (requested for the home services boxes) ================= */
+const VEC = [
+// illustrated, but trimmed down: one hero object + soft glow + one accent each (subscriptions · repairs · accessories)
+`<svg viewBox="0 0 64 64"><linearGradient id="gA" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FF6B77"/><stop offset="1" stop-color="#C40A1A"/></linearGradient><radialGradient id="gB" cx=".5" cy=".45" r=".55"><stop offset="0" stop-color="#FFE3E6"/><stop offset="1" stop-color="#FFE3E6" stop-opacity="0"/></radialGradient><circle cx="32" cy="33" r="30" fill="url(#gB)"/><ellipse cx="32" cy="56" rx="15" ry="2.2" fill="#7a0b14" opacity=".1"/><rect x="31" y="44" width="2.6" height="7" fill="#2E2E2E"/><rect x="24" y="50" width="16" height="3" rx="1.5" fill="#2E2E2E"/><rect x="11" y="16" width="42" height="29" rx="7" fill="url(#gA)"/><rect x="11.5" y="16.5" width="41" height="28" rx="6.5" fill="none" stroke="#fff" stroke-opacity=".28"/><path d="M28.5 24.5v11.5l9.5-5.75Z" fill="#fff" stroke="#fff" stroke-width="1.4" stroke-linejoin="round"/><path d="M48 11c2 0 2.6-.6 2.6-2.6 0 2 .6 2.6 2.6 2.6-2 0-2.6.6-2.6 2.6 0-2-.6-2.6-2.6-2.6Z" fill="#FFC53D"/></svg>`,
+`<svg viewBox="0 0 64 64"><defs><linearGradient id="gA" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FF6B77"/><stop offset="1" stop-color="#C40A1A"/></linearGradient><radialGradient id="gB" cx=".5" cy=".45" r=".55"><stop offset="0" stop-color="#FFE3E6"/><stop offset="1" stop-color="#FFE3E6" stop-opacity="0"/></radialGradient><linearGradient id="gC" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFF5F6"/><stop offset="1" stop-color="#FFD3D8"/></linearGradient></defs><circle cx="32" cy="33" r="30" fill="url(#gB)"/><ellipse cx="32" cy="56" rx="15" ry="2.2" fill="#7a0b14" opacity=".1"/><rect x="17" y="9" width="24" height="44" rx="6.5" fill="#2E2E2E"/><rect x="19.6" y="12.6" width="18.8" height="36.8" rx="4.4" fill="url(#gC)"/><rect x="26" y="14.6" width="6" height="1.8" rx=".9" fill="#2E2E2E"/><g transform="rotate(45 42 40)"><rect x="39.4" y="36" width="5.2" height="17" rx="2.6" fill="url(#gA)"/><circle cx="42" cy="31.5" r="7" fill="url(#gA)"/><rect x="39.8" y="23.5" width="4.4" height="7" rx="1.2" fill="#FFF1F3"/></g><path d="M9 20c2 0 2.6-.6 2.6-2.6 0 2 .6 2.6 2.6 2.6-2 0-2.6.6-2.6 2.6 0-2-.6-2.6-2.6-2.6Z" fill="#FF8A95"/></svg>`,
+`<svg viewBox="0 0 64 64"><linearGradient id="gA" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FF6B77"/><stop offset="1" stop-color="#C40A1A"/></linearGradient><radialGradient id="gB" cx=".5" cy=".45" r=".55"><stop offset="0" stop-color="#FFE3E6"/><stop offset="1" stop-color="#FFE3E6" stop-opacity="0"/></radialGradient><circle cx="32" cy="33" r="30" fill="url(#gB)"/><ellipse cx="32" cy="56" rx="15" ry="2.2" fill="#7a0b14" opacity=".1"/><path d="M15 40v-7a17 17 0 0 1 34 0v7" fill="none" stroke="#2E2E2E" stroke-width="4.2" stroke-linecap="round"/><rect x="9.5" y="35" width="12" height="18" rx="5.5" fill="url(#gA)"/><rect x="42.5" y="35" width="12" height="18" rx="5.5" fill="url(#gA)"/><rect x="13" y="38.5" width="2.6" height="8" rx="1.3" fill="#fff" opacity=".5"/><rect x="46" y="38.5" width="2.6" height="8" rx="1.3" fill="#fff" opacity=".5"/><path d="M46 13c2 0 2.6-.6 2.6-2.6 0 2 .6 2.6 2.6 2.6-2 0-2.6.6-2.6 2.6 0-2-.6-2.6-2.6-2.6Z" fill="#FFC53D"/></svg>`,
+];
+// RTL: the first (rightmost) tile is subscriptions, then repairs, then accessories (not designed yet)
+const tiles = (xs, y, size, suffix) => xs.map((x, i) => B(x, y, size, size, { cls: "tile" + (i === 2 ? " na" : ""), a: ['data-go="subs"', 'data-go="repairs"', ""][i], html: VEC[i].replace(/(id="|url\(#)(g[A-C])/g, (m, a, b) => a + b + suffix + i) }));
+
+/* ================= INTRO ================= */
+scr("splash", { title: "Splash", group: "Intro" }, [
+  I("splash", 0, 0, 412, 917), B(100, 316, 212, 210, { cls: "blurx" }), I("loader", 188, 683, 36, 36, { cls: "spin" }),
+]);
+scr("update", { title: "Optional update", group: "Intro", cls: "grad", bot: 760 }, [
+  I("upd-body", 0, 0, 412, 917, { z: "g" }), B(100, 80, 212, 190, { cls: "blurx" }),
+  BTN(48, 795, 150, 54, "بعدا", 'data-go="scan"', { cls: "ghost baked" }), BTN(214, 795, 150, 54, "به روز رسانی", 'data-ov="stores"'),
+]);
+scr("update-force", { title: "Required update", group: "Intro", cls: "grad", bot: 760 }, [
+  I("force-body", 0, 0, 412, 917, { z: "g" }), B(100, 80, 212, 190, { cls: "blurx" }),
+  BTN(48, 795, 316, 54, "به روزرسانی به نسخه جدید", 'data-ov="stores"'),
+]);
+ov("stores", "pop", [24, 334, 364, 248], [I("pop-stores", 24, 334, 364, 248), A(44, 354, 32, 32, "data-close"), NAh(100, 426, 212, 54), NAh(100, 496, 212, 54)]);
+scr("scan", { title: "Store scan", group: "Intro", cls: "grad", bot: 760 }, [
+  I("scan-body", 0, 0, 412, 917, { z: "g" }),
+  B(46, 266, 320, 320, { cls: "scan-corners", html: SCAN_CORNERS }),
+  B(80, 300, 252, 252, { cls: "scan-code-art", html: '<img src="img/store-barcode.svg" alt="" draggable="false">' }),
+  A(46, 266, 320, 320, 'id="qrHit"', { l: "اسکن" }),
+  B(66, 296, 280, 2, { id: "beam", st: "background:var(--p);box-shadow:0 0 12px 2px rgba(219,12,27,.5);z-index:2;pointer-events:none" }),
+  B(48, 703, 316, 46, { cls: "fld", html: '<input id="shopCode" inputmode="numeric" maxlength="8" aria-label="کد فروشگاه" style="text-align:center">' }),
+  BTN(48, 795, 316, 54, "اعمال", 'id="applyCode"'),
+]);
+scr("welcome", { title: "Welcome", group: "Intro", cls: "grad", bot: 760 }, [
+  I("welcome-body", 0, 0, 412, 917, { z: "g" }), I("welcome-animation", 0, 0, 412, 548, { z: "g" }),
+  BTN(48, 795, 316, 54, "بزن بریم!", 'data-go="login"'),
+]);
+
+/* ================= LOGIN ================= */
+scr("login", { title: "Phone number", group: "Login", cls: "grad", bot: 760 }, [
+  I("login-body", 0, 0, 412, 470),
+  B(51, 484, 316, 46, { cls: "fld", id: "phoneFld", html: '<input id="phone" inputmode="numeric" maxlength="11" placeholder="شماره موبایل" autocomplete="off" style="text-align:right">' }),
+  T("شماره موبایل", 283, 473, 68, 22, { id: "phoneLgd", cls: "lgd", s: 12, c: "var(--gray)", st: "display:none" }),
+  I("ic-phone", 57, 496, 22, 22, { id: "phoneIc", st: "z-index:3;pointer-events:none" }),
+  BTN(48, 795, 316, 54, "ارسال کد", 'id="sendCode"', { cls: "off" }),
+]);
+const otpItems = pre => [
+  I(pre + "-top", 0, 0, 412, 330, { id: pre + "Top" }),
+  T("", 40, pre === "eotp" ? 398 : 390, 332, 58, { id: pre + "Msg", ml: 1, al: "c", s: 16, w: 7, lh: 29 }),
+  T("", 40, 427, 332, 25, { id: pre + "Sub", al: "c", s: 14, c: "var(--gray)", st: "display:none" }),
+  B(47, 484, 318, 54, { cls: "otp", id: pre + "Box", html: '<i></i><i></i><i></i><i></i><i></i><input inputmode="numeric" maxlength="5" autocomplete="one-time-code" aria-label="کد تایید">' }),
+  B(60, 558, 292, 25, { id: pre + "Timer", st: "text-align:center;font-size:12px;line-height:25px;z-index:2" }),
+  BTN(48, 795, 316, 54, "تایید", `id="${pre}Ok"`, { cls: "off" }),
+];
+scr("otp", { title: "Verification code", group: "Login", cls: "grad", bot: 760 }, otpItems("otp"));
+scr("login-ok", { title: "Signed in", group: "Login", cls: "grad" }, [
+  I("ok-top", 0, 0, 412, 330), T("شما با موفقیت وارد شدید.", 118, 390, 176, 29, { s: 16, w: 7 }), I("loader", 188, 683, 36, 36, { cls: "spin" }),
+]);
+
+/* ================= HOME ================= */
+scr("home", { title: "Home", group: "Home", H: 1434, top: 96, bot: 1348 }, [
+  I("home-top", 0, 0, 412, 96), B(150, 36, 112, 50, { cls: "blurx" }),
+  A(348, 40, 40, 40, 'data-ov="menu"', { l: "منو" }), A(24, 40, 40, 40, 'data-go="notifs"', { l: "اعلان‌ها" }),
+  I("home-body", 0, 96, 412, 1252),
+  B(24, 400, 364, 74, { cls: "tier", id: "tier", html: '<button data-go="wallet"><img src="img/tier-wallet.png" alt="اعتبار کیف پول"></button><button data-go="cards"><img src="img/tier-level.png" alt="سطح مشتری"></button>' }),
+  ...tiles([278, 151, 24], 535, 110, "h"),
+  A(261, 755, 112, 24, 'data-chat="فروشنده"', { l: "ارتباط با فروشنده" }),
+  B(0, 874, 333, 256, { cls: "rail", html: `<img class="im" src="img/feat-all.png" alt="" style="left:20px;top:6px;width:50px;height:30px;position:absolute"><button class="all" data-go="shop" aria-label="همه"></button><div class="list">${'<button data-go="product"><img src="img/feat-card.png" alt="گوشی موبایل سامسونگ"></button>'.repeat(4)}</div>` }),
+  A(214, 1175, 174, 91, 'data-go="store"', { l: "پروفایل مغازه" }), A(24, 1175, 174, 91, 'data-chat="فروشنده"', { l: "ارتباط با فروشنده" }),
+  ...TABBAR("tab-home", 1348, "home"),
+]);
+ov("menu", "side", [135, 0, 277, 917], [
+  I("drawer", 135, 0, 277, 917),
+  ...[["account"], ["chats"], ["notifs"], ["store"], ["subs", 'data-arg="status"'], ["update-force"], ["login", "data-reset"]].map(([g, x = ""], i) => A(135, 135 + 59 * i, 277, 57, `data-go="${g}" ${x}`)),
+]);
+
+/* ================= WALLET & CARDS ================= */
+scr("wallet", { title: "Wallet", group: "Wallet & membership" }, [
+  I("wallet", 0, 0, 412, 917), A(24, 44, 40, 40, "data-back"), A(328, 410, 30, 30, 'data-ov="credit"', { l: "جزئیات اعتبار" }),
+  NAh(48, 502, 153, 36), NAh(160, 816, 92, 34),
+]);
+ov("credit", "pop", [24, 289, 364, 340], [I("pop-credit", 24, 289, 364, 340), A(32, 297, 32, 32, "data-close"), A(48, 557, 316, 48, "data-close")]);
+scr("cards", { title: "Membership cards", group: "Wallet & membership" }, [
+  // page under the card (benefits, dots, tint) cross-fades per card; the card band on top slides
+  B(0, 0, 412, 917, { id: "cardBg", st: "z-index:0", html: [1, 2, 3, 4].map(n => `<img src="${src("card-" + n)}" alt="" draggable="false">`).join("") }),
+  B(0, 100, 412, 262, { cls: "cband", id: "cardSwipe", html: `<svg width="412" height="262" viewBox="0 100 412 262" aria-hidden="true"><rect y="100" width="412" height="262" fill="#2E2E2E"/><path d="M0 341.5Q206 228 412 342.5V362H0Z" fill="#FAFAFA"/></svg><div class="ctrack" id="cTrack">${[1, 2, 3, 4].map((n, i) => `<div class="cslide" style="left:${39 + i * 309}px;background-image:url(${src("card-" + n)})"></div>`).join("")}</div>` }),
+  A(24, 44, 40, 40, "data-back"),
+  B(25, 214, 28, 28, { cls: "carr", a: 'data-card="-1" role="button" tabindex="0" aria-label="کارت قبلی"', html: '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 6.5L9 12l5.5 5.5"/></svg>' }),
+  B(359, 214, 28, 28, { cls: "carr", a: 'data-card="1" role="button" tabindex="0" aria-label="کارت بعدی"', html: '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 6.5L15 12l-5.5 5.5"/></svg>' }),
+]);
+
+/* ================= SHOP WINDOW ================= */
+scr("shop", { title: "Store front", group: "Shop window", bot: 831 }, [
+  I("shop-top", 0, 0, 412, 304),
+  A(348, 38, 40, 40, 'data-ov="menu"'), A(24, 38, 40, 40, 'data-go="notifs"'), A(24, 146, 42, 42, 'data-go="store"'), A(74, 146, 42, 42, 'data-ov="calls"'),
+  B(24, 320, 364, 46, { cls: "sbox", html: '<img src="img/ic-search.png" alt=""><input id="q" placeholder="جست و جو محصولات" autocomplete="off">' }),
+  B(211, 382, 177, 36, { cls: "dd", id: "catBtn", a: 'data-ov="cats"', html: 'دسته بندی محصولات<img src="img/ic-down-o.png" alt="">' }),
+  B(24, 382, 177, 36, { cls: "dd", id: "sortBtn", a: 'data-ov="sort"', html: 'مرتب‌سازی براساس<img src="img/ic-down-o.png" alt="">' }),
+  B(0, 434, 412, 400, { cls: "prodlist", id: "products" }),
+  ...TABBAR("tab-shop", 831, "shop"),
+]);
+ov("cats", "sheet", [0, 528, 412, 389], [I("sheet-head-cats", 0, 528, 412, 56), A(8, 536, 36, 36, "data-close"), B(0, 600, 412, 280, { id: "catGrid", st: "z-index:2" })]);
+ov("sort", "sheet", [0, 528, 412, 389], [I("sheet-head-sort", 0, 528, 412, 56), A(8, 536, 36, 36, "data-close"), B(0, 590, 412, 260, { id: "sortList", st: "z-index:2" })]);
+ov("calls", "sheet", [0, 315, 412, 602], [I("sheet-calls", 0, 315, 412, 602), A(8, 323, 36, 36, "data-close"), NAh(24, 389, 364, 166), NAh(24, 561, 364, 166), NAh(24, 733, 364, 166)]);
+scr("product", { title: "Product details", group: "Shop window", H: 1122, bot: 1024 }, [
+  I("prod-top", 0, 0, 412, 500), A(24, 44, 40, 40, "data-back"), I("prod-chips", 0, 500, 412, 85),
+  B(0, 588, 412, 420, { cls: "acc", html: `
+    <img class="h" data-acc="s" src="img/acc-spec-h.png" alt="مشخصات فنی" style="width:364px;height:40px">
+    <div class="b" id="acc-s" style="height:220px"><img src="img/acc-spec-b.png" alt="" style="width:412px;height:208px;margin-top:12px"></div>
+    <img class="h" data-acc="d" src="img/acc-desc-h.png" alt="توضیحات" style="width:364px;height:40px">
+    <div class="b" id="acc-d" style="height:104px"><img src="img/acc-desc-b.png" alt="" style="width:412px;height:100px;margin-top:4px"></div>` }),
+  B(0, 1024, 412, 98, { st: "background:#fff;box-shadow:0 -2px 10px rgba(0,0,0,.05)" }),
+  BTN(24, 1044, 364, 54, "خرید", 'data-ov="buy"'),
+]);
+ov("buy", "pop", [24, 288, 364, 340], [I("pop-buy", 24, 288, 364, 340), A(32, 296, 34, 34, "data-close"), A(48, 556, 316, 48, "data-close")]);
+
+/* ================= STORE PROFILE ================= */
+scr("store", { title: "Store profile", group: "Store profile", top: 132 }, [
+  I("st-h-hours", 0, 0, 412, 132, { id: "stHead" }),
+  A(24, 40, 40, 40, "data-back"), A(348, 40, 40, 40, 'data-ov="menu"'),
+  A(262, 96, 150, 36, 'data-pane="hours"', { id: "tabHours" }), A(140, 96, 122, 36, 'data-pane="contact"', { id: "tabContact" }), A(30, 96, 110, 36, 'data-pane="addr"', { id: "tabAddr" }), A(0, 96, 30, 36, 'data-pane="about"', { id: "tabAbout" }),
+  B(0, 132, 412, 785, { id: "stBody", st: "z-index:1" }),
+]);
+const PANES = {
+  hours: { img: "st-hours", h: 370, hot: [[24, 444, 364, 42, 'data-ov="closure"']] },
+  contact: { img: "st-contact", h: 660, hot: [[282, 242, 40, 40, ""], [282, 392, 40, 40, ""], [282, 542, 40, 40, ""], [86, 704, 240, 42, ""]] },
+  addr: { img: "st-addr", h: 480, hot: [[32, 434, 348, 140, 'data-ov="maps"'], [24, 156, 120, 39, ""], [156, 156, 110, 39, ""]] },
+  about: { img: "st-about", h: 785, hot: [[24, 500, 365, 245, ""]] },
+};
+ov("closure", "pop", [24, 278, 364, 362], [I("pop-closure", 24, 278, 364, 362), A(32, 286, 34, 34, "data-close"), A(48, 568, 316, 48, "data-close")]);
+ov("maps", "sheet", [0, 728, 412, 189], [I("sheet-maps", 0, 728, 412, 189), A(8, 736, 32, 32, "data-close"), NAh(66, 808, 52, 86), NAh(176, 808, 52, 86), NAh(284, 808, 62, 86)]);
+
+/* ================= SERVICES ================= */
+scr("services", { title: "All services", group: "Services", top: 104, bot: 831 }, [
+  I("svc-head", 0, 0, 412, 104), A(348, 40, 40, 40, 'data-ov="menu"'), A(24, 40, 40, 40, 'data-go="notifs"'),
+  I("svc-banner1", 0, 120, 412, 100),
+  ...tiles([288, 156, 24], 233, 100, "s"),
+  ...[379, 525].flatMap(y => [288, 156, 24].map(x => B(x, y, 100, 100, { cls: "tile na" }))),
+  ...[233, 379, 525].flatMap(y => [288, 156, 24].map(x => T("خدمات فروشگاه", x, y + 115, 100, 22, { al: "c", s: 12, c: "var(--gray)" }))),
+  I("svc-banner2", 24, 690, 364, 118), A(57, 760, 110, 24, 'data-chat="فروشنده"'),
+  ...TABBAR("tab-svc", 831, "services"),
+]);
+scr("subs", { title: "Online subscriptions", group: "Services", top: 104 }, [
+  I("subs-head", 0, 0, 412, 104), A(24, 40, 40, 40, "data-back"), A(348, 40, 40, 40, 'data-ov="menu"'),
+  B(24, 120, 364, 46, { cls: "sbox", html: '<img src="img/ic-search2.png" alt=""><input id="subQ" placeholder="جست و جو" autocomplete="off">' }),
+  B(211, 182, 177, 39, { cls: "seg on", a: 'data-sv="list"', html: "سرویس‌های اشتراک" }),
+  B(24, 182, 177, 39, { cls: "seg", a: 'data-sv="status"', html: "وضعیت درخواست ها" }),
+  B(24, 242, 364, 361, { cls: "lst", id: "subList" }),
+]);
+scr("order", { title: "Subscription order", group: "Services", H: 1147, bot: 1044, cls: "bgw" }, [
+  I("order-top", 0, 0, 412, 590), A(24, 44, 40, 40, "data-back"),
+  T("ریجن کارت اشتراک", 24, 596, 364, 25, { s: 14, w: 7, al: "r" }),
+  B(24, 631, 364, 42, { cls: "sel", html: '<select id="ordRegion" required><option value="" disabled selected hidden>انتخاب</option><option>آمریکا</option><option>ترکیه</option><option>امارات</option><option>آلمان</option></select><img src="img/ic-down-l.png" alt="">' }),
+  T("مدت زمان اشتراک", 24, 694, 364, 25, { s: 14, w: 7, al: "r" }),
+  B(24, 729, 364, 42, { cls: "sel", html: '<select id="ordTime" required><option value="" disabled selected hidden>انتخاب</option><option>یک ماهه</option><option>سه ماهه</option><option>شش ماهه</option></select><img src="img/ic-down-l.png" alt="">' }),
+  I("order-rcpt", 24, 808, 364, 197),
+  B(0, 1044, 412, 103, { st: "background:#fff;box-shadow:0 -2px 10px rgba(0,0,0,.05)" }),
+  BTN(24, 1064, 364, 54, "ثبت سفارش", 'id="placeOrder"'),
+]);
+ov("ordered", "pop", [24, 289, 364, 340], [I("pop-ordered", 24, 289, 364, 340), A(32, 297, 34, 34, "data-close"), A(48, 557, 150, 48, "data-close"), A(214, 557, 150, 48, 'id="trackOrder"')]);
+scr("sstat", { title: "Request status", group: "Services", cls: "grad", bot: 760 }, [
+  I("ss-top", 0, 0, 412, 330), A(24, 38, 40, 40, "data-back"),
+  I("ss-ok", 48, 345, 316, 46, { id: "ssBox" }),
+  I("ss-cred", 48, 417, 316, 112, { id: "ssCred" }), A(48, 417, 316, 48, 'data-copy="amirhosein"', { id: "cp1" }), A(48, 481, 316, 48, 'data-copy="bagheri75"', { id: "cp2" }),
+  BTN(48, 795, 316, 54, "درخواست تمدید", 'id="ssBtn"'),
+]);
+scr("repairs", { title: "Repairs", group: "Services", top: 104 }, [
+  I("repairs-head", 0, 0, 412, 104), A(24, 40, 40, 40, "data-back"), A(348, 40, 40, 40, 'data-ov="menu"'),
+  I("repairs-body", 40, 340, 332, 170), BTN(94, 565, 224, 48, "درخواست", 'data-ov="repform"'),
+]);
+ov("repform", "sheet", [0, 139, 412, 778], [
+  I("sheet-head-rep", 0, 139, 412, 56), A(12, 147, 36, 36, "data-close"),
+  ...[["نوع دستگاه", 293, 276, 71, ["گوشی موبایل", "تبلت", "ساعت هوشمند", "هدفون"]], ["نوع درخواست", 283, 380, 81, ["تعویض گلس", "تعویض باتری", "تعمیر برد", "نرم‌افزار"]], ["زمان درخواست", 278, 484, 86, ["شنبه ۱۴۰۳/۰۵/۱۱", "یکشنبه ۱۴۰۳/۰۵/۱۲", "دوشنبه ۱۴۰۳/۰۵/۱۳"]]]
+    .flatMap(([l, x, y, w, opts]) => [T(l, x, y, w, 25, { s: 14, w: 7 }), B(48, y + 34, 316, 42, { cls: "sel", html: `<select required><option value="" disabled selected hidden>انتخاب</option>${opts.map(o => `<option>${o}</option>`).join("")}</select><img src="img/ic-down-l.png" alt="">` })]),
+  BTN(48, 795, 316, 54, "ارسال درخواست", 'id="sendRepair"'),
+]);
+ov("repaired", "pop", [24, 289, 364, 340], [I("pop-repaired", 24, 289, 364, 340), A(32, 297, 34, 34, "data-close"), A(48, 557, 316, 48, "data-close")]);
+
+/* ================= SUPPORT ================= */
+scr("chats", { title: "Chat list", group: "Support", top: 104, bot: 831 }, [
+  I("chats-head", 0, 0, 412, 104), A(348, 40, 40, 40, 'data-ov="menu"'), A(24, 40, 40, 40, 'data-go="notifs"'),
+  ...["فروشنده", "اشتراک آنلاین", "محصول", "اشتراک آنلاین "].flatMap((n, i) => [I("chat-row-" + (i + 1), 0, 114 + 86 * i, 412, 86), A(0, 114 + 86 * i, 412, 86, `data-chat="${n}"`)]),
+  ...TABBAR("tab-chats", 831, "chats"),
+]);
+scr("chat", { title: "Chat", group: "Support", top: 104, bot: 825, scls: "chatscroll" }, [
+  I("chat-head", 0, 0, 412, 104), A(24, 44, 40, 40, "data-back"), NAh(72, 44, 40, 40),
+  B(0, 104, 412, 720, { id: "thread", st: "z-index:2" }),
+  // chat box rebuilt in code on the Figma "chatbox" geometry: pill 364×46 at (24,16), icons 24px
+  B(0, 825, 412, 92, { cls: "cbar", html: '<input class="msgin" id="msgIn" placeholder="پیام خود را بنویسید" autocomplete="off">' }),
+  B(352, 852, 24, 24, { cls: "cic", id: "micSend", a: 'role="button" tabindex="0" aria-label="ارسال پیام"', html: ICON.mic + ICON.send }),
+  B(36, 852, 24, 24, { cls: "cic", a: 'data-ov="share" role="button" tabindex="0" aria-label="پیوست"', html: ICON.attach }),
+  B(68, 852, 24, 24, { cls: "cic na", a: 'role="button" tabindex="0" aria-label="ایموجی"', html: ICON.emoji }),
+]);
+ov("share", "sheet", [0, 688, 412, 229], [I("sheet-share", 0, 688, 412, 229), A(8, 696, 36, 36, "data-close"), NAh(222, 762, 160, 123), NAh(30, 762, 160, 123)]);
+
+/* ================= PROFILE ================= */
+scr("account", { title: "Account", group: "Profile", bot: 831 }, [
+  I("acct", 0, 0, 412, 452),
+  A(0, 114, 412, 56, 'data-go="userinfo"'), NAh(0, 170, 412, 56), NAh(0, 226, 412, 56), NAh(0, 282, 412, 56), NAh(0, 338, 412, 56), A(0, 394, 412, 56, 'data-go="aboutapp"'),
+  ...TABBAR("tab-acct", 831, "account"),
+]);
+const FIELD = (y, label, lx, lw, inner, o = {}) => [
+  B(48, y, 316, 46, { cls: "fld" + (o.tap ? " tap" : o.ro ? " ro" : ""), id: o.id, a: o.tap ? o.a + ' role="button" tabindex="0"' : o.a, st: o.tap ? "cursor:pointer;" : "", html: inner }),
+  T(label, lx, y - 12, lw, 25, { cls: "lgd", s: 12, c: "var(--gray)", id: o.lid, st: "line-height:25px;background:#F5F5F5;" + (o.lst || "") }),
+];
+scr("userinfo", { title: "User information", group: "Profile", bot: 760 }, [
+  I("ui-top", 0, 0, 412, 256), A(24, 44, 40, 40, "data-back"), A(152, 126, 42, 42, 'data-ov="photo"', { l: "تغییر عکس" }),
+  I("ui-red", 0, 256, 412, 30, { id: "redbar" }),
+  ...FIELD(333, "نام و نام خانوادگی", 232, 120, '<input id="fName" value="امیرحسین باقری" style="text-align:right">'),
+  ...FIELD(410, "جنسیت", 299, 53, '<span id="fGender" style="flex:1;text-align:right;font-size:14px;font-weight:500">مرد</span>', { tap: 1, a: 'data-ov="gender"' }),
+  ...FIELD(487, "تاریخ تولد", 287, 65, '<span id="fDate" style="flex:1;text-align:right;font-size:14px;font-weight:500">۱۴۰۳/۰۵/۰۷</span>', { tap: 1, a: 'data-ov="date"' }),
+  ...FIELD(564, "شماره موبایل", 265, 87, '<span style="flex:1;text-align:right;font-size:14px;font-weight:500;direction:ltr">+989226079676</span>', { ro: 1 }),
+  I("ic-check-green", 59, 575, 24, 24, { st: "z-index:2" }),
+  ...FIELD(634, "ایمیل", 312, 40, '<span id="fEmail" style="flex:1;text-align:right;font-size:12px;color:#9E9E9E">ایمیل</span>', { tap: 1, a: 'data-ov="email"', lid: "emailLgd", lst: "display:none" }),
+  BTN(48, 795, 316, 54, "ذخیره", 'id="saveInfo"'),
+]);
+ov("photo", "sheet", [0, 688, 412, 229], [I("sheet-photo", 0, 688, 412, 229), A(8, 696, 36, 36, "data-close"), NAh(222, 762, 160, 123), NAh(30, 762, 160, 123)]);
+ov("email", "sheet", [0, 560, 412, 357], [
+  I("sheet-head-email", 0, 560, 412, 56), A(8, 568, 36, 36, "data-close"),
+  T("لطفا آدرس ایمیل خود را وارد کنید.", 164, 674, 200, 25, { s: 14, w: 6 }),
+  B(48, 711, 316, 46, { cls: "fld", html: '<input id="emailIn" type="email" placeholder="ایمیل" autocomplete="off" style="direction:ltr;text-align:right">' }),
+  BTN(48, 795, 316, 54, "تایید", 'id="emailOk"'),
+]);
+ov("date", "sheet", [0, 584, 412, 333], [
+  I("sheet-head-date", 0, 584, 412, 56), A(8, 592, 36, 36, "data-close"),
+  B(60, 700, 292, 1, { cls: "wl" }), B(60, 745, 292, 1, { cls: "wl" }),
+  B(60, 655, 292, 135, { cls: "wheel", id: "wheel", html: '<div class="col" data-w="y"></div><div class="col" data-w="m"></div><div class="col" data-w="d"></div>' }),
+  BTN(48, 795, 316, 54, "تایید", 'id="dateOk"'),
+]);
+ov("gender", "sheet", [0, 584, 412, 333], [
+  I("sheet-head-gender", 0, 584, 412, 56), A(8, 592, 36, 36, "data-close"),
+  T("مرد", 304, 686, 24, 29, { s: 16, w: 7 }), I("rd2-on", 342, 688.5, 24, 24, { id: "g0" }), A(48, 680, 316, 40, 'data-g="0"'),
+  B(48, 721, 316, 1, { st: "background:#DADADA" }),
+  T("زن", 312, 736, 18, 29, { s: 16, w: 7 }), I("rd2-off", 342, 738.5, 24, 24, { id: "g1" }), A(48, 728, 316, 40, 'data-g="1"'),
+  BTN(48, 795, 316, 54, "تایید", 'id="genderOk"'),
+]);
+scr("email-otp", { title: "Email verification", group: "Profile", cls: "grad", bot: 760 }, otpItems("eotp"));
+scr("email-ok", { title: "Email saved", group: "Profile", cls: "grad", bot: 760 }, [
+  I("eok-top", 0, 0, 412, 330), T("ایمیل شما با موفقیت ثبت شد.", 105, 398, 202, 29, { s: 16, w: 7 }),
+  BTN(48, 795, 316, 54, "ادامه", "data-back"),
+]);
+scr("aboutapp", { title: "About the app", group: "Profile" }, [I("aboutapp", 0, 0, 412, 917), A(24, 44, 40, 40, "data-back")]);
+
+/* ================= NOTIFICATIONS ================= */
+scr("notifs", { title: "Notifications", group: "Notifications", top: 104 }, [
+  I("notif-head", 0, 0, 412, 104), A(24, 40, 40, 40, "data-back"), A(348, 40, 40, 40, 'data-ov="menu"'),
+  B(327, 120, 61, 36, { cls: "seg on", a: 'data-nf="all"', html: "همه" }),
+  B(253, 120, 64, 36, { cls: "seg", a: 'data-nf="msg"', html: "پیام ها" }),
+  B(155, 120, 88, 36, { cls: "seg", a: 'data-nf="req"', html: "درخواست ها" }),
+  B(0, 180, 412, 700, { id: "nList", st: "z-index:2" }),
+]);
+scr("ndetail", { title: "Notification details", group: "Notifications", cls: "grad", bot: 760 }, [
+  // only the bell badge is taken from the export (its grey frame background is masked away), the back arrow is drawn
+  I("nd-top", 0, 0, 412, 310, { st: "-webkit-mask-image:linear-gradient(#000 30px,transparent 30px),radial-gradient(circle at 206px 236px,#000 55px,transparent 56px);mask-image:linear-gradient(#000 30px,transparent 30px),radial-gradient(circle at 206px 236px,#000 55px,transparent 56px)" }),
+  B(24, 44, 40, 40, { cls: "cic", a: 'data-back role="button" tabindex="0" aria-label="بازگشت"', st: "display:grid;place-items:center", html: ICON.back }),
+  T("درخواست فعالسازی شما با موفقیت ثبت شد.", 129, 380, 259, 25, { id: "ndTitle", s: 14, w: 7 }),
+  T("۲۰ ساعت پیش", 24, 382, 74, 22, { al: "l", s: 12, c: "var(--gray)" }),
+  T("", 24, 417, 364, 56, { id: "ndText", ml: 1, s: 14, lh: 28, st: "text-align:justify" }),
+  BTN(48, 795, 316, 54, "متوجه شدم", "data-back"),
+]);
+
+/* ================= render ================= */
+$("#app").innerHTML = SCR.map(renderScreen).join("") + OVS.map(renderOv).join("") + '<div class="toast" id="toast" role="status"></div>';
+// hotspots sit over parts of the design image, so give screen readers a name derived from what they do
+$$(".hs", $("#app")).filter(h => !h.getAttribute("aria-label")).forEach(h => {
+  const d = h.dataset, to = d.go && $("#" + d.go);
+  const name = h.classList.contains("na") ? NA : "back" in d ? "بازگشت" : "close" in d ? "بستن"
+    : to ? to.dataset.title : d.ov || (d.chat ? "گفتگو" : d.copy ? "کپی " + d.copy : d.pane || (d.g === "0" ? "مرد" : d.g === "1" ? "زن" : h.id));
+  if (name) h.setAttribute("aria-label", name);
+});
+const CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+function syncSel(box) {
+  const s = $("select", box), b = $(".sel-btn", box), o = s.selectedOptions[0];
+  b.textContent = o ? o.text : ""; b.classList.toggle("ph", !s.value); b.disabled = s.disabled;
+  $$(".sel-menu button", box).forEach(x => x.setAttribute("aria-selected", String(!!s.value && x.dataset.v === s.value)));
+}
+const syncSels = () => $$(".sel").forEach(syncSel);
+function closeSel(except) { $$(".sel.open").forEach(x => { if (x !== except) { x.classList.remove("open"); $(".sel-btn", x).setAttribute("aria-expanded", "false"); } }); }
+$$(".sel").forEach(box => {
+  const s = $("select", box); s.tabIndex = -1; s.setAttribute("aria-hidden", "true");
+  const b = document.createElement("button"); b.type = "button"; b.className = "sel-btn"; b.setAttribute("aria-haspopup", "listbox"); b.setAttribute("aria-expanded", "false");
+  const m = document.createElement("div"); m.className = "sel-menu"; m.setAttribute("role", "listbox");
+  m.innerHTML = [...s.options].filter(o => !o.hidden).map(o => `<button type="button" role="option" tabindex="-1" data-v="${o.value}"><span>${o.text}</span>${CHECK}</button>`).join("");
+  box.prepend(b); box.append(m); syncSel(box);
+  const open = () => {
+    closeSel(box);
+    const host = box.closest(".scroll,.sh,.pp") || $("#app"), r = box.getBoundingClientRect(), c = host.getBoundingClientRect(), h = Math.min(m.scrollHeight, 212) * (r.height / box.offsetHeight || 1);
+    box.classList.toggle("up", r.bottom + h + 8 > c.bottom && r.top - h - 8 > c.top);
+    box.classList.add("open"); b.setAttribute("aria-expanded", "true");
+    ($(".sel-menu [aria-selected=true]", box) || $(".sel-menu button", box)).focus({ preventScroll: true });
+  };
+  b.addEventListener("click", () => box.classList.contains("open") ? closeSel() : open());
+  b.addEventListener("keydown", e => { if (e.key === "ArrowDown" || e.key === "ArrowUp") { e.preventDefault(); open(); } });
+  m.addEventListener("click", e => {
+    const o = e.target.closest("button"); if (!o) return;
+    s.value = o.dataset.v; s.dispatchEvent(new Event("change", { bubbles: true }));
+    closeSel(); b.focus();
+  });
+  m.addEventListener("keydown", e => {
+    const items = $$("button", m), i = items.indexOf(document.activeElement);
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") { e.preventDefault(); items[(i + (e.key === "ArrowDown" ? 1 : -1) + items.length) % items.length].focus(); }
+    else if (e.key === "Escape" || e.key === "Tab") { closeSel(); b.focus(); e.stopPropagation(); }
+  });
+  s.addEventListener("change", () => syncSel(box));
+});
+document.addEventListener("pointerdown", e => { if (!e.target.closest(".sel.open")) closeSel(); });
+const fieldControls = ".fld input,.sbox input,.sel select,.msgin";
+const syncFieldValue = control => {
+  const field = control.matches(".msgin") ? control : control.closest(".fld,.sbox,.sel");
+  if (field) field.classList.toggle("has-value", !!control.value);
+};
+$("#app").querySelectorAll(fieldControls).forEach(syncFieldValue);
+$("#app").addEventListener("input", e => { if (e.target.matches(fieldControls)) syncFieldValue(e.target); });
+$("#app").addEventListener("change", e => { if (e.target.matches(fieldControls)) syncFieldValue(e.target); });
+const fit = () => {
+  const app = $("#app"), dev = $(".device"), z = new URLSearchParams(location.search).get("zoom");
+  if (innerWidth <= 560) { const k = innerWidth / 412; dev.style.zoom = ""; app.style.zoom = k; app.style.height = (innerHeight / k) + "px"; }
+  else { app.style.zoom = ""; app.style.height = "917px"; dev.style.zoom = z || Math.min(.8, (innerHeight - 40) / 937).toFixed(3); }
+};
+addEventListener("resize", fit); fit();
+
+/* ================= toast / routing / overlays ================= */
+let tId;
+function toast(msg = NA) {
+  const t = $("#toast");
+  t.innerHTML = (msg === NA ? '<svg width="15" height="15" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="none" stroke="#F5A524" stroke-width="1.4"/><path d="M8 4.5v4.5" stroke="#F5A524" stroke-width="1.6" stroke-linecap="round"/><circle cx="8" cy="11.4" r=".9" fill="#F5A524"/></svg>' : "") + msg;
+  t.classList.add("show"); clearTimeout(tId); tId = setTimeout(() => t.classList.remove("show"), 2200);
+}
+const screens = $$(".screen");
+let current = null, stack = [];
+const ENTER = {}, OPEN = {};
+function go(id, opts = {}) {
+  if (!$("#" + id)?.classList.contains("screen")) id = "splash";
+  if (opts.reset) stack = [];
+  else if (current && current !== id && !opts.back && !opts.replace) stack.push(current);
+  while (stack.length && stack[stack.length - 1] === id) stack.pop();
+  current = id;
+  screens.forEach(s => s.classList.toggle("on", s.id === id));
+  const navs = $$("[data-screen]").filter(b => b.dataset.screen === id);
+  const exact = navs.filter(b => (b.dataset.arg || "") === (opts.arg || ""));
+  const mark = new Set(exact.length ? exact : navs.filter(b => !b.dataset.arg));
+  $$("[data-screen]").forEach(b => b.classList.toggle("on", mark.has(b)));
+  $$(".scroll", $("#" + id)).forEach(sc => sc.scrollTop = 0);
+  history.replaceState(null, "", "#" + id);
+  closeOv(); $("#sheet").classList.remove("open");
+  (ENTER[id] || (() => {}))(opts.arg);
+}
+const back = () => go(stack.pop() || "home", { back: true });
+function openOv(id, from) { closeOv(); const o = $("#ov-" + id); if (o) { o.classList.add("on"); if (from?.matches(".fld.tap")) from.classList.add("is-active"); (OPEN[id] || (() => {}))(); } }
+function closeOv() { closeSel(); $$(".ov.on").forEach(o => o.classList.remove("on")); $$(".fld.is-active").forEach(f => f.classList.remove("is-active")); }
+// error state: mark the field and give it a short shake so the user sees which one failed
+function flagErr(f) { f.classList.add("err"); f.classList.remove("shake"); void f.offsetWidth; f.classList.add("shake"); f.addEventListener("animationend", () => f.classList.remove("shake"), { once: true }); }
+
+/* presentation nav */
+const NAV_EXTRA = { home: [["Side menu", "menu"]], notifs: [["No notifications", "empty"]] };
+let groupNow = "";
+$("#screenNav").innerHTML = screens.map(s => {
+  let h = "";
+  if (s.dataset.group !== groupNow) { h += `${groupNow ? "</nav>" : ""}<h6>${s.dataset.group}</h6><nav>`; groupNow = s.dataset.group; }
+  h += `<button data-screen="${s.id}">${s.dataset.title}</button>`;
+  (NAV_EXTRA[s.id] || []).forEach(([t, a]) => h += `<button data-screen="${s.id}" data-arg="${a}">${t}</button>`);
+  return h;
+}).join("") + "</nav>";
+{ const c = $("#panel").cloneNode(true); c.removeAttribute("id"); c.querySelectorAll("[id]").forEach(e => e.removeAttribute("id")); $("#sheet .in").appendChild(c); } // copy for the mobile sheet, without duplicate ids
+
+document.addEventListener("click", e => {
+  const t = e.target;
+  const s = t.closest("[data-screen]"); if (s) { const a = s.dataset.arg; go(s.dataset.screen, { reset: true, arg: a }); if (a === "menu") openOv("menu"); return; }
+  if (t.closest(".na")) { e.preventDefault(); return toast(); }
+  if (t.closest(".btn.off")) return;
+  if (t.closest("[data-close]")) return closeOv();
+  const o = t.closest("[data-ov]"); if (o) return openOv(o.dataset.ov, o);
+  const ch = t.closest("[data-chat]"); if (ch) return go("chat", { arg: ch.dataset.chat });
+  const g = t.closest("[data-go]"); if (g) return go(g.dataset.go, { arg: g.dataset.arg, reset: g.hasAttribute("data-reset") });
+  if (t.closest("[data-back]")) return back();
+});
+$("#fab").onclick = () => $("#sheet").classList.add("open");
+$("#sheet").onclick = e => { if (e.target.id === "sheet") $("#sheet").classList.remove("open"); };
+addEventListener("keydown", e => { if (e.key === "Escape") closeOv(); if ((e.key === "Enter" || e.key === " ") && e.target.matches(".btn,.fld.tap,.carr,.cic")) { e.preventDefault(); e.target.click(); } });
+
+/* ================= intro ================= */
+let splashT;
+ENTER.splash = () => { clearTimeout(splashT); splashT = setTimeout(() => current === "splash" && go("update"), 1800); };
+$("#splash").addEventListener("click", () => go("update"));
+const beam = $("#beam").animate([{ top: "296px" }, { top: "552px" }], { duration: 1800, iterations: Infinity, direction: "alternate", easing: "ease-in-out" });
+$("#qrHit").onclick = () => { toast("کد فروشگاه اسکن شد"); setTimeout(() => go("welcome"), 700); };
+$("#shopCode").oninput = e => { e.target.value = toEn(e.target.value).replace(/\D/g, ""); e.target.parentElement.classList.remove("err"); };
+$("#applyCode").onclick = () => {
+  if (!$("#shopCode").value) { flagErr($("#shopCode").parentElement); return toast("کد فروشگاه را وارد کنید یا کیو آر کد را اسکن کنید."); }
+  go("welcome");
+};
+
+/* ================= login + OTP ================= */
+let phoneNo = "09226079676";
+$("#phone").addEventListener("input", e => {
+  e.target.value = toEn(e.target.value).replace(/\D/g, "").slice(0, 11);
+  const has = !!e.target.value;
+  e.target.style.textAlign = has ? "center" : "right";
+  $("#phoneLgd").style.display = has ? "" : "none"; $("#phoneIc").style.display = has ? "none" : "";
+  $("#sendCode").classList.toggle("off", !/^09\d{9}$/.test(e.target.value));
+});
+$("#sendCode").onclick = () => { if ($("#sendCode").classList.contains("off")) return; phoneNo = $("#phone").value; go("otp"); };
+function otpCtl(pre, screen, { tops, target, done }) {
+  const box = $("#" + pre + "Box"), inp = $("input", box), cells = $$("i", box), ok = $("#" + pre + "Ok"), timer = $("#" + pre + "Timer");
+  const msg = $("#" + pre + "Msg"), sub = $("#" + pre + "Sub");
+  let tries = 0, left = 80, tick, locked = false;
+  const setTop = k => { const s2 = src(tops[k]); if (!$("#" + pre + "Top").src.endsWith(s2)) $("#" + pre + "Top").src = s2; };
+  const render = () => {
+    const value = inp.value;
+    box.classList.toggle("has-value", !!value.length);
+    cells.forEach((cell, i) => {
+      cell.textContent = value[i] ? fa(value[i]) : "";
+      cell.classList.toggle("filled", !!value[i]);
+      cell.classList.toggle("cur", document.activeElement === inp && i === Math.min(value.length, 4) && !locked);
+    });
+    ok.classList.toggle("off", value.length < 5 || locked);
+    if (!box.classList.contains("e") && !locked) setTop(value.length ? "fill" : "normal");
+  };
+  const state = k => {
+    box.classList.remove("e", "lock"); locked = false; inp.disabled = false; sub.style.display = "none"; msg.style.color = "";
+    if (k === "err") { setTop("err"); box.classList.add("e"); box.classList.remove("shake"); void box.offsetWidth; box.classList.add("shake"); msg.innerHTML = "کد وارد شده نامعتبر است!"; msg.style.color = "var(--err)"; timer.innerHTML = '<button data-resend style="font-weight:700;font-size:14px">ارسال مجدد کد</button>'; }
+    else if (k === "lock") {
+      setTop("lock"); box.classList.add("lock"); locked = true; inp.value = ""; msg.innerHTML = "تعداد کد وارد شده بیش از حد مجاز است!"; sub.textContent = "لطفا چند دقیقه دیگر امتحان کنید."; sub.style.display = "";
+      timer.innerHTML = '<button disabled style="font-weight:700;font-size:14px;color:#A6A6A6">ارسال مجدد کد</button>';
+      setTimeout(() => { if (current === screen) start(); }, 6000);
+    } else msg.innerHTML = target();
+    render();
+  };
+  const runTimer = () => {
+    clearInterval(tick); left = 80;
+    const draw = () => timer.innerHTML = left > 0 ? '<b style="font-size:14px;font-weight:700;margin-left:4px">' + fa(String(Math.floor(left / 60)).padStart(2, "0") + ":" + String(left % 60).padStart(2, "0")) + '</b>مانده تا دریافت کد مجدد' : '<button data-resend style="font-weight:700;font-size:14px">ارسال مجدد کد</button>';
+    draw(); tick = setInterval(() => { if (current !== screen) return clearInterval(tick); left--; draw(); if (left <= 0) clearInterval(tick); }, 1000);
+  };
+  const start = () => { tries = 0; inp.value = ""; state("normal"); runTimer(); setTimeout(() => { if (current === screen) inp.focus(); }, 60); };
+  inp.addEventListener("input", () => { inp.value = toEn(inp.value).replace(/\D/g, "").slice(0, 5); if (box.classList.contains("e")) state("normal"); render(); });
+  inp.addEventListener("focus", render); inp.addEventListener("blur", render);
+  box.addEventListener("mousedown", e => { e.preventDefault(); if (!locked) inp.focus(); });
+  box.addEventListener("touchend", () => { if (!locked) inp.focus(); });
+  inp.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); ok.click(); } });
+  timer.addEventListener("click", e => { if (e.target.closest("[data-resend]:not(:disabled)")) { toast("کد جدید ارسال شد"); tries = 0; inp.value = ""; state("normal"); runTimer(); inp.focus(); } });
+  ok.onclick = () => {
+    if (ok.classList.contains("off")) return;
+    if (inp.value === "12345") { clearInterval(tick); return done(); }
+    tries++; clearInterval(tick); state(tries >= 3 ? "lock" : "err");
+  };
+  return start;
+}
+ENTER.otp = otpCtl("otp", "otp", { tops: { normal: "otp-top", fill: "otp2-top", err: "err-top", lock: "lock-top" }, target: () => `کد تایید<br>به شماره موبایل ${fa(phoneNo)} پیامک شد.`, done: () => go("login-ok", { replace: true }) });
+ENTER["login-ok"] = () => setTimeout(() => current === "login-ok" && go("home", { reset: true }), 1600);
+
+/* ================= membership cards (4 designed states) ================= */
+let card = 0;
+const CW = 309, track = $("#cTrack"), slides = $$(".cslide", track);
+const setCard = i => {
+  card = Math.max(0, Math.min(3, i));
+  track.style.transform = `translateX(${-card * CW}px)`;
+  slides.forEach((sl, k) => sl.classList.toggle("on", k === card));
+  $$("#cardBg img").forEach((im, k) => im.classList.toggle("on", k === card));
+  $$(".carr").forEach(b => b.classList.toggle("off", +b.dataset.card < 0 ? card === 0 : card === 3));
+};
+document.addEventListener("click", e => { const b = e.target.closest("[data-card]"); if (b) setCard(card + +b.dataset.card); });
+addEventListener("keydown", e => { if (current === "cards" && (e.key === "ArrowLeft" || e.key === "ArrowRight")) setCard(card + (e.key === "ArrowRight" ? 1 : -1)); });
+(() => {
+  // drag follows the finger, then snaps to the nearest card
+  let x0 = null, d = 0, y0 = 0, horiz = false; const sw = $("#cardSwipe"), scr = $("#cards");
+  const k = () => sw.getBoundingClientRect().width / 412 || 1;
+  scr.style.touchAction = "pan-y";
+  scr.addEventListener("pointerdown", e => { if (e.button > 0 || e.target.closest(".carr,[data-back],.hs")) return; x0 = e.clientX; y0 = e.clientY; d = 0; horiz = false; });
+  scr.addEventListener("pointermove", e => {
+    if (x0 === null) return;
+    const dx = e.clientX - x0;
+    if (!horiz) { if (Math.abs(dx) < 6 || Math.abs(dx) < Math.abs(e.clientY - y0)) return; horiz = true; track.classList.add("drag"); scr.setPointerCapture(e.pointerId); }
+    d = dx / k();
+    const edge = (card === 0 && d > 0) || (card === 3 && d < 0);
+    track.style.transform = `translateX(${-card * CW + (edge ? d / 3 : d)}px)`;
+  });
+  const end = () => { if (x0 === null) return; x0 = null; if (!horiz) return; track.classList.remove("drag"); setCard(Math.abs(d) > 50 ? card + (d < 0 ? 1 : -1) : card); };
+  scr.addEventListener("pointerup", end); scr.addEventListener("pointercancel", end);
+})();
+ENTER.cards = () => setCard(0);
+
+/* ================= shop window ================= */
+const PRODUCTS = [
+  { img: "p-dark", stock: true, price: 8000000, old: true, rank: 1 },
+  { img: "p-blue", stock: false, price: 8000000, rank: 2 },
+  { img: "p-blue", stock: true, price: 8500000, rank: 3 },
+  { img: "p-blue", stock: false, price: 7900000, rank: 4 },
+  { img: "p-dark", stock: true, price: 9200000, rank: 5 },
+];
+const NAME = "موبایل سامسونگ مدل گلکسی";
+const CATS = [["all", "همه محصولات", "cat-empty", 281, 606], ["phone", "گوشی موبایل", "cat-phone", 161, 606], ["head", "هندزفری", "cat-head", 41, 606], ["charger", "شارژر", "cat-empty", 281, 750], ["guard", "محافظ گوشی", "cat-empty", 161, 750], ["case", "قاب گوشی", "cat-empty", 41, 750]];
+const SORTS = [["rank", "پیشنهاد فروشنده"], ["special", "محصولات ویژه یا منتخب"], ["week", "پرفروش های هفته"], ["cheap", "ارزان ترین"], ["dear", "گران ترین"]];
+let cat = "phone", sort = "rank";
+const dot = n => fa(n.toLocaleString("en-US").replace(/,/g, "."));
+function renderProducts() {
+  const q = $("#q").value.replace(/ي/g, "ی").replace(/ك/g, "ک").trim();
+  let list = PRODUCTS.map((p, i) => ({ ...p, i })).filter(p => (cat === "all" || cat === "phone") && (!q || NAME.includes(q)));
+  if (sort === "cheap") list.sort((a, b) => a.price - b.price);
+  else if (sort === "dear") list.sort((a, b) => b.price - a.price);
+  else if (sort === "week") list.sort((a, b) => b.rank - a.rank);
+  else if (sort === "special") list.sort((a, b) => (b.old ? 1 : 0) - (a.old ? 1 : 0));
+  const box = $("#products");
+  box.innerHTML = list.length ? list.map((p, n) => `
+    <div class="prow" data-go="product" style="top:${152 * n}px">
+      <div class="ph"><img src="${src(p.img)}" alt=""></div>
+      ${p.old ? `<img src="${src("badge-off")}" alt="" style="left:272px;top:0;width:30px;height:20px">` : ""}
+      <p class="t" style="right:152px;top:12px;font-size:14px;line-height:25px;font-weight:700">${NAME}</p>
+      <img src="${src(p.stock ? "ic-in" : "ic-out")}" alt="" style="left:247px;top:45px;width:14px;height:14px">
+      <p class="t" style="right:168px;top:41px;font-size:12px;line-height:22px;font-weight:600;color:${p.stock ? "#1A9F48" : "#D92D20"}">${p.stock ? "موجود در فروشگاه" : "ناموجود"}</p>
+      ${p.old ? `<img src="${src("old-price")}" alt="" style="left:24px;top:79px;width:106px;height:19px">` : ""}
+      <p class="t" style="left:61px;top:97px;font-size:18px;line-height:32px;font-weight:700">${dot(p.price)}</p>
+      <p class="t" style="left:27px;top:102px;font-size:12px;line-height:22px">تومان</p>
+      ${n < list.length - 1 ? '<i class="ln"></i>' : ""}
+    </div>`).join("") : '<p class="empty">محصولی در این دسته‌بندی پیدا نشد.</p>';
+  const h = Math.max(1, list.length) * 152;
+  box.style.height = h + "px";
+  box.closest(".cv").style.height = Math.max(831, 434 + h + 10) + "px";
+  $("#catBtn").classList.toggle("act", cat !== "phone");
+  $("#sortBtn").classList.toggle("act", sort !== "rank");
+}
+OPEN.cats = () => {
+  $("#catGrid").innerHTML = CATS.map(([k, l, img, x, y]) => `<div class="cat${k === cat ? " on" : ""}" data-cat="${k}" style="position:absolute;left:${x}px;top:${y - 600}px"><div class="c"><img class="${img === "cat-phone" ? "clip" : ""}" src="${src(img)}" alt=""></div><p>${l}</p></div>`).join("");
+};
+OPEN.sort = () => {
+  $("#sortList").innerHTML = SORTS.map(([k, l], i) => `<div data-sort="${k}" style="position:absolute;left:16px;top:${8 + 51 * i}px;width:380px;height:38px;cursor:pointer">
+    <img src="${src(k === sort ? "rd-on" : "rd-off")}" alt="" style="position:absolute;left:-2px;top:-1.5px;width:28px;height:28px">
+    <p class="t" style="position:absolute;right:0;top:0;font-size:14px;line-height:25px">${l}</p>
+    <i style="position:absolute;left:0;right:0;top:38px;height:1px;background:#E3E3E3"></i></div>`).join("");
+};
+$("#catGrid").onclick = e => { const b = e.target.closest("[data-cat]"); if (!b) return; cat = b.dataset.cat; OPEN.cats(); setTimeout(() => { closeOv(); renderProducts(); }, 200); };
+$("#sortList").onclick = e => { const b = e.target.closest("[data-sort]"); if (!b) return; sort = b.dataset.sort; OPEN.sort(); setTimeout(() => { closeOv(); renderProducts(); }, 200); };
+$("#q").addEventListener("input", renderProducts);
+renderProducts();
+document.addEventListener("click", e => { const a = e.target.closest("[data-acc]"); if (a) $("#acc-" + a.dataset.acc).classList.toggle("closed"); });
+
+/* ================= store profile ================= */
+function setPane(k) {
+  const p = PANES[k];
+  $("#stHead").src = src({ hours: "st-h-hours", contact: "st-h-contact", addr: "st-h-addr", about: "st-h-about" }[k]);
+  $("#stBody").innerHTML = el(I(p.img, 0, 132, 412, p.h), 0, 132, 412) + p.hot.map(([x, y, w, h, a]) => el(a ? A(x, y, w, h, a) : NAh(x, y, w, h), 0, 132, 412)).join("");
+  $("#stBody").style.height = p.h + "px"; $("#stBody").closest(".cv").style.height = p.h + "px";
+  $("#store .scroll").scrollTop = 0;
+  // in the design the tab strip scrolls left when "about" is selected
+  const ab = k === "about", pos = (id, l, w) => Object.assign($(id).style, { left: l + "px", width: w + "px" });
+  if (ab) { pos("#tabAbout", 0, 150); pos("#tabAddr", 150, 115); pos("#tabContact", 265, 120); $("#tabHours").style.display = "none"; }
+  else { pos("#tabAbout", 0, 30); pos("#tabAddr", 30, 110); pos("#tabContact", 140, 122); $("#tabHours").style.display = ""; }
+}
+document.addEventListener("click", e => { const b = e.target.closest("[data-pane]"); if (b) setPane(b.dataset.pane); });
+ENTER.store = pane => setPane(pane || "hours");
+
+/* ================= services ================= */
+const SUBS = [
+  { k: "spotify", name: "اشتراک یک ماهه اسپاتیفای", price: "۱.۰۰۰.۰۰۰ تا ۱۰.۰۰۰.۰۰۰ تومان", off: true, h: 93 },
+  { k: "netflix", name: "اشتراک یک ماهه نتفلیکس", price: "۸.۰۰۰.۰۰۰ تومان", off: true, h: 93 },
+  { k: "youtube", name: "اشتراک یک ماهه یوتیوب", price: "۶.۰۰۰.۰۰۰ تومان", h: 90 },
+  { k: "spotify", name: "اشتراک یک ماهه اسپاتیفای", price: "۱.۰۰۰.۰۰۰ تومان", h: 90 },
+];
+let REQS = [{ s: 0, ok: true }, { s: 1, ok: false }, { s: 2, ok: true }, { s: 1, ok: false }];
+let subView = "list";
+function renderSubs() {
+  const q = $("#subQ").value.trim(), m = s => !q || s.name.includes(q);
+  let y = 0, html = "";
+  if (subView === "list") SUBS.forEach(s => {
+    if (!m(s)) return;
+    const sp = s.k === "spotify", big = s.h === 93;
+    html += `<div class="lrow${sp ? "" : " na"}" ${sp ? 'data-go="order"' : ""} style="top:${y}px;height:${s.h}px">
+      <img src="${src("sub-ic-" + s.k)}" alt="" style="left:308px;top:${big ? 22.5 : 21}px;width:48px;height:48px">
+      <p class="t" style="right:66px;top:${big ? 20 : 17}px;font-size:14px;line-height:25px;font-weight:700">${s.name}</p>
+      <p class="t" style="right:66px;top:${big ? 49.5 : 48}px;font-size:14px;line-height:25px">${s.price}</p>
+      ${s.off ? `<img src="${src("badge-20")}" alt="" style="left:7px;top:52px;width:60px;height:20px">` : ""}
+      <i class="sep"></i></div>`;
+    y += s.h;
+  });
+  else REQS.forEach((r, i) => {
+    const s = SUBS[r.s]; if (!m(s)) return;
+    const sp = s.k === "spotify";
+    html += `<div class="lrow${sp ? "" : " na"}" ${sp ? `data-go="sstat" data-arg="${i}"` : ""} style="top:${y}px;height:70px">
+      <img src="${src("st-ic-" + s.k)}" alt="" style="left:324px;top:20px;width:30px;height:30px">
+      <p class="t" style="right:46px;top:22.5px;font-size:14px;line-height:25px;font-weight:700">${s.name}</p>
+      <img src="${src(r.ok ? "st-ok" : "st-wait")}" alt="" style="left:${r.ok ? 11 : 12}px;top:20px;width:${r.ok ? 87 : 89}px;height:30px">
+      <i class="sep"></i></div>`;
+    y += 70;
+  });
+  const box = $("#subList");
+  box.innerHTML = html || '<p class="empty" style="top:20px">موردی پیدا نشد.</p>';
+  box.style.height = Math.max(y, 80) + "px";
+  box.closest(".cv").style.height = Math.max(813, 242 - 104 + y + 20) + "px";
+}
+document.addEventListener("click", e => { const b = e.target.closest("[data-sv]"); if (b) setSubView(b.dataset.sv); });
+function setSubView(v) { subView = v; $$("#subs [data-sv]").forEach(x => x.classList.toggle("on", x.dataset.sv === v)); renderSubs(); }
+$("#subQ").addEventListener("input", renderSubs);
+ENTER.subs = arg => { $("#subQ").value = ""; setSubView(arg === "status" ? "status" : "list"); };
+ENTER.order = () => { $("#ordRegion").value = ""; $("#ordTime").value = ""; $$("#order .sel").forEach(x => x.classList.remove("err", "has-value")); syncSels(); };
+$$("#order select").forEach(s => s.onchange = () => s.parentElement.classList.remove("err"));
+$("#placeOrder").onclick = () => {
+  const bad = ["#ordRegion", "#ordTime"].filter(s => !$(s).value);
+  bad.forEach(s => flagErr($(s).parentElement));
+  if (bad.length) return toast("لطفا ریجن و مدت زمان اشتراک را انتخاب کنید.");
+  REQS.unshift({ s: 0, ok: false }); openOv("ordered");
+};
+$("#trackOrder").onclick = () => go("subs", { arg: "status", replace: true });
+ENTER.sstat = (i = 0) => {
+  const r = REQS[+i] || REQS[0];
+  $("#ssBox").src = src(r.ok ? "ss-ok" : "ss-wait");
+  ["#ssCred", "#cp1", "#cp2"].forEach(s => $(s).style.display = r.ok ? "" : "none");
+  $("#ssBtn").textContent = r.ok ? "درخواست تمدید" : "پیگیری";
+  $("#ssBtn").onclick = () => r.ok ? go("order") : go("chat", { arg: "اشتراک آنلاین" });
+};
+document.addEventListener("click", e => { const b = e.target.closest("[data-copy]"); if (b) { navigator.clipboard?.writeText(b.dataset.copy).catch(() => {}); toast("کپی شد"); } });
+$("#sendRepair").onclick = () => {
+  const sels = $$("#ov-repform select"), bad = sels.filter(s => !s.value);
+  bad.forEach(s => flagErr(s.parentElement));
+  if (bad.length) return toast("لطفا همه موارد فرم را انتخاب کنید.");
+  sels.forEach(s => s.value = ""); syncSels(); openOv("repaired");
+};
+$$("#ov-repform select").forEach(s => s.onchange = () => s.parentElement.classList.remove("err"));
+
+/* ================= support / chat ================= */
+const THREADS = {};
+let chatWith = "فروشنده";
+const nowT = () => { const d = new Date(); return fa(String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0")); };
+function renderThread() {
+  const box = $("#thread"), sent = THREADS[chatWith] || [];
+  let html = "", y0;
+  if (chatWith === "فروشنده") {   // the designed conversation
+    html = [I("chat-date", 176, 113, 60, 28), I("msg-1", 20, 149, 271, 130), I("msg-2", 20, 279, 271, 105), I("msg-3", 121, 392, 271, 105), I("msg-photo", 121, 497, 271, 410)].map(i => el(i, 0, 104, 412)).join("");
+    y0 = 907 - 104 + 10;
+  } else if (!sent.length) {        // the designed empty state
+    html = el(I("chat-empty", 56, 360, 300, 170), 0, 104, 412); y0 = 0;
+  } else y0 = 16;
+  html += sent.map(m => `<div class="bub" style="right:24px">${m.t}<time>${m.at}</time></div>`).join("");
+  box.innerHTML = html;
+  let yy = y0;
+  $$(".bub", box).forEach(b => { b.style.top = yy + "px"; yy += b.offsetHeight + 10; });
+  const h = Math.max(720, yy + 10); box.style.height = h + "px"; box.closest(".cv").style.height = h + "px";
+  const sc = $("#chat .scroll"); sc.scrollTop = sc.scrollHeight;
+}
+ENTER.chat = (who = "فروشنده") => { chatWith = who; $("#msgIn").value = ""; setMic(); renderThread(); };
+const setMic = () => $("#micSend").classList.toggle("has-text", !!$("#msgIn").value.trim());
+$("#msgIn").addEventListener("input", setMic);
+const sendMsg = () => {
+  const v = $("#msgIn").value.trim(); if (!v) return toast();
+  (THREADS[chatWith] = THREADS[chatWith] || []).push({ t: v.replace(/</g, "&lt;"), at: nowT() });
+  $("#msgIn").value = ""; setMic(); renderThread();
+};
+$("#micSend").onclick = sendMsg;
+$("#msgIn").addEventListener("keydown", e => { if (e.key === "Enter") sendMsg(); });
+
+/* ================= profile ================= */
+let gender = 0, gPick = 0, email = "", pendingEmail = "";
+const showG = g => [0, 1].forEach(i => $("#g" + i).src = src(i === g ? "rd2-on" : "rd2-off"));
+OPEN.gender = () => { gPick = gender; showG(gender); };
+document.addEventListener("click", e => { const b = e.target.closest("[data-g]"); if (b) { gPick = +b.dataset.g; showG(gPick); } });
+$("#genderOk").onclick = () => { gender = gPick; $("#fGender").textContent = gender ? "زن" : "مرد"; closeOv(); };
+const MONTHS = ["فروردین", "اردیبهشت", "خرداد", "تیر", "مرداد", "شهریور", "مهر", "آبان", "آذر", "دی", "بهمن", "اسفند"];
+const WV = { d: Array.from({ length: 31 }, (_, i) => fa(i + 1)), m: MONTHS, y: Array.from({ length: 70 }, (_, i) => fa(1405 - i)) };
+let dateSel = { d: 6, m: 4, y: 2 };
+$$("#wheel .col").forEach(col => {
+  const k = col.dataset.w; col.innerHTML = WV[k].map(v => `<div>${v}</div>`).join("");
+  col.addEventListener("scroll", () => { const i = Math.round(col.scrollTop / 45); dateSel[k] = i; [...col.children].forEach((c, j) => c.classList.toggle("on", j === i)); }, { passive: true });
+  col.addEventListener("click", e => { const i = [...col.children].indexOf(e.target); if (i >= 0) col.scrollTo({ top: i * 45, behavior: "smooth" }); });
+});
+OPEN.date = () => requestAnimationFrame(() => $$("#wheel .col").forEach(col => { col.scrollTop = dateSel[col.dataset.w] * 45; col.dispatchEvent(new Event("scroll")); }));
+$("#dateOk").onclick = () => { $("#fDate").textContent = `${WV.y[dateSel.y]}/${fa(String(dateSel.m + 1).padStart(2, "0"))}/${fa(String(dateSel.d + 1).padStart(2, "0"))}`; closeOv(); };
+OPEN.email = () => { $("#emailIn").value = email; setTimeout(() => $("#emailIn").focus(), 280); };
+$("#emailOk").onclick = () => {
+  const v = $("#emailIn").value.trim();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) { flagErr($("#emailIn").parentElement); return toast("ایمیل معتبر نیست."); }
+  $("#emailIn").parentElement.classList.remove("err"); pendingEmail = v; go("email-otp");
+};
+$("#emailIn").addEventListener("input", e => e.target.parentElement.classList.remove("err"));
+$("#emailIn").addEventListener("keydown", e => { if (e.key === "Enter") $("#emailOk").click(); });
+const mask = e => { const [u, d] = e.split("@"); return `<span style="direction:ltr;display:inline-block">${u.slice(0, 2)}${"*".repeat(Math.max(3, u.length - 2))}@${d}</span>`; };
+ENTER["email-otp"] = otpCtl("eotp", "email-otp", { tops: { normal: "eotp-top", fill: "eotp-top", err: "err-top", lock: "lock-top" }, target: () => `کد تایید<br>به ایمیل ${mask(pendingEmail || "nastaran@gmail.com")} پیامک شد.`, done: () => { email = pendingEmail || "nastaran@gmail.com"; go("email-ok", { replace: true }); } });
+ENTER.userinfo = () => {
+  const f = $("#fEmail");
+  f.textContent = email || "ایمیل"; f.style.cssText = email ? "flex:1;text-align:right;font-size:14px;font-weight:600;direction:ltr" : "flex:1;text-align:right;font-size:12px;color:#9E9E9E";
+  $("#emailLgd").style.display = email ? "" : "none";
+  $("#redbar").style.display = email ? "none" : "";
+};
+$("#saveInfo").onclick = () => {
+  const n = $("#fName");
+  n.parentElement.classList.toggle("err", !n.value.trim());
+  if (!n.value.trim()) return toast("نام و نام خانوادگی را وارد کنید.");
+  if (!email) return toast("برای تکمیل اطلاعات، ایمیل خود را وارد کنید.");
+  toast("اطلاعات ذخیره شد.");
+};
+
+/* ================= notifications ================= */
+const NOTES = [{ k: "req", un: 1 }, { k: "req", un: 1 }, { k: "req", un: 1 }, { k: "msg" }, { date: 1 }, { k: "req" }, { k: "msg" }, { k: "msg" }];
+let nf = "all", nEmpty = false;
+function renderNotes() {
+  const list = nEmpty ? [] : NOTES.map((n, i) => ({ ...n, i })).filter(n => n.date ? nf === "all" : nf === "all" || n.k === nf);
+  const box = $("#nList"); let y = 0, html = "";
+  if (list.some(n => !n.date)) {
+    list.forEach(n => {
+      if (n.date) { html += `<img src="${src("n-date")}" alt="۱۴۰۳/۱۰/۳" style="position:absolute;left:24px;top:${y + 2}px;width:364px;height:34px">`; y += 50; return; }
+      html += `<div class="nrow" data-note="${n.i}" style="top:${y}px"><img src="${src(n.un ? "n-unread" : n.k === "req" ? "n-req" : "n-msg")}" alt=""></div>`; y += 81;
+    });
+    html += `<p class="t na" style="position:absolute;left:50%;transform:translateX(-50%);top:${y + 33}px;font-size:12px;line-height:22px;font-weight:600;color:var(--p);text-decoration:underline;text-underline-offset:5px;cursor:pointer">مشاهده بیشتر</p>`;
+    y += 80;
+  } else { html = el(I("notif-empty", 110, 355, 192, 155), 0, 180, 412); y = 400; }
+  box.innerHTML = html; box.style.height = y + "px"; box.closest(".cv").style.height = Math.max(813, 76 + y) + "px";
+}
+document.addEventListener("click", e => {
+  const c = e.target.closest("[data-nf]"); if (c) { nf = c.dataset.nf; $$("#notifs [data-nf]").forEach(x => x.classList.toggle("on", x === c)); renderNotes(); return; }
+  const b = e.target.closest("[data-note]"); if (!b) return;
+  const n = NOTES[+b.dataset.note]; n.un = 0;
+  $("#ndTitle").textContent = n.k === "req" ? "درخواست فعالسازی شما با موفقیت ثبت شد." : "پیام از طرف فروشنده";
+  $("#ndText").textContent = n.k === "req" ? "اپلیکیشن ساپورت موبایل‌فروشی یک پلتفرم ارتباطی و بازاریابی برای مغازه‌های فیزیکی مانند موبایل فروشی ها است." : "سلام خریدار عزیز، جهت اطلاع خدمتتون خواستم اعلام کنم فروشگاه به دلیل سفر کاری تا تاریخ ۱۴۰۳/۰۵/۱۱ تعطیل می باشد.";
+  go("ndetail");
+});
+ENTER.notifs = arg => { nEmpty = arg === "empty"; renderNotes(); };
+
+/* ================= start ================= */
+go(location.hash.slice(1) || "splash", { reset: true });
+// images of hidden screens are fetched but not decoded until shown, which made details pop in late.
+// Warm them (plus the ones swapped in by script) so every screen paints complete on first view.
+(() => {
+  const extra = ["otp2-top", "err-top", "lock-top", "rd2-on", "rd2-off", "ic-send", "ss-ok", "ss-wait", "st-h-hours", "st-h-contact", "st-h-addr", "st-h-about"];
+  const imgs = [...$$("#app img"), ...extra.map(n => Object.assign(new Image(), { src: src(n) }))];
+  const idle = window.requestIdleCallback || (fn => setTimeout(fn, 50));
+  const step = () => { const batch = imgs.splice(0, 6); batch.forEach(im => im.decode?.().catch(() => {})); if (imgs.length) idle(step); };
+  addEventListener("load", () => idle(step));
+})();
+// review helpers: ?s=600 scrolls the open screen, ?ov=name opens an overlay (used for screenshots)
+const _q = new URLSearchParams(location.search);
+if (_q.get("s")) setTimeout(() => $$(".screen.on .scroll").forEach(x => x.scrollTop = +_q.get("s")), 150);
+if (_q.get("ov")) setTimeout(() => openOv(_q.get("ov")), 200);
+</script>
+</body>
+</html>

@@ -1,6 +1,7 @@
 window.STORIES = window.STORIES || {};
 window.STORIES["marketplace"] = {
   tools: "Figma",
+  live: "apps/marketplace/index.html",
   story: [
     { type: "stats", items: [
       { value: "6", label: "Key app screens" },

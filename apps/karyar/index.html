@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Karyar — Prototype</title>
+<link rel="icon" href="../../images/avatar.png">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden}
+body{background:#17181B;display:flex;align-items:center;justify-content:center;gap:48px;padding:20px}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+
+/* desktop presentation — same shell as the other live prototypes */
+.panel{direction:ltr;font-family:"Segoe UI",system-ui,sans-serif;color:#EDEDED;width:270px;flex:none;max-height:calc(100vh - 40px);overflow:auto;scrollbar-width:thin;scrollbar-color:#333 transparent}
+.panel a.back{color:#9a9a9a;text-decoration:none;font-size:13px}
+.panel a.back:hover{color:#fff}
+.panel h1{font-size:21px;font-weight:700;margin:12px 0 6px;line-height:1.25}
+.panel p{font-size:12.5px;color:#9a9a9a;line-height:1.55;margin-bottom:6px}
+.panel p b{color:#ddd;font-weight:600}
+.panel h6{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:#6f6f6f;margin:14px 0 4px 12px}
+.panel nav{display:flex;flex-direction:column;gap:1px}
+.panel nav button{display:block;text-align:left;padding:6px 12px;border-radius:8px;color:#cfcfcf;font-size:13px;line-height:1.4}
+.panel nav button:hover{background:#232428}
+.panel nav button.on{background:#2A2C30;color:#fff;box-shadow:inset 3px 0 0 #1D56D3}
+/* sized exactly like the admin-panel live page: a 1440×1076 frame scaled to the space beside the panel */
+.device{position:relative;flex:none;border-radius:14px;overflow:hidden;background:#EEF1F6;box-shadow:0 30px 80px rgba(0,0,0,.5),0 0 0 1px #2a2a2e}
+/* the site always runs at a 1440px desktop viewport and is scaled to the box, so it never switches to its mobile layout */
+.device iframe{position:absolute;left:0;top:0;width:1440px;border:0;transform-origin:0 0}
+
+/* mobile: the app fills the screen; the screen list opens from a small button */
+.menu-fab,.sheet{display:none}
+@media (max-width:900px){
+  body{padding:0;display:block}
+  .panel{display:none}
+  body{background:#EEF1F6}
+  .device{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);border-radius:0;box-shadow:none}
+  .menu-fab{display:grid;place-items:center;position:fixed;top:6px;left:50%;transform:translateX(-50%);z-index:80;height:24px;padding:0 12px;border-radius:12px;background:rgba(0,0,0,.45);color:#fff;font:600 11px "Segoe UI",system-ui,sans-serif;backdrop-filter:blur(6px)}
+  .sheet{display:block;position:fixed;inset:0;z-index:90;background:rgba(0,0,0,.45);opacity:0;visibility:hidden;transition:.2s}
+  .sheet.open{opacity:1;visibility:visible}
+  .sheet .in{position:absolute;left:0;right:0;bottom:0;max-height:80vh;overflow:auto;background:#1E1F22;border-radius:20px 20px 0 0;padding:18px 16px 20px;transform:translateY(100%);transition:transform .25s}
+  .sheet.open .in{transform:none}
+  .sheet .panel{display:block;width:auto;max-height:none}
+}
+</style>
+</head>
+<body>
+
+<aside class="panel" id="panel">
+  <a class="back" href="../../project.html?id=job-search">← Back to case study</a>
+  <h1>Karyar — AI Job Search<br>Interactive prototype</h1>
+  <p>The working product: sign in, upload a résumé, let the assistant build a job profile, then browse matched ads with filters and job preferences.</p>
+  <p>Any mobile number starting with <b>09</b> works, and any <b>6-digit</b> code. The résumé must be a real CV (PDF, Word or JPEG). This demo shows sample job ads.</p>
+  <div id="screenNav"></div>
+</aside>
+
+<div class="device"><iframe id="app" src="app.html" title="Karyar prototype"></iframe></div>
+
+<button class="menu-fab" id="fab">Screens ▾</button>
+<div class="sheet" id="sheet"><div class="in"></div></div>
+
+<script>
+// one entry per screen; in-between states (uploading, upload done) stay inside the flow
+const SCREENS = [
+  ["Sign in", [["Home", 0], ["Login", 1], ["Verification code", 3]]],
+  ["Résumé", [["Upload résumé", 4], ["Building job profile", 8]]],
+  ["Jobs", [["Job listings", 7]]],
+];
+const OWNER = { 0: 0, 1: 1, 2: 3, 3: 3, 4: 4, 5: 4, 6: 4, 7: 7, 8: 8 };
+const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+$("#screenNav").innerHTML = SCREENS.map(([g, items]) => `<h6>${g}</h6><nav>${items.map(([t, i]) => `<button data-i="${i}">${t}</button>`).join("")}</nav>`).join("");
+{ const c = $("#panel").cloneNode(true); c.removeAttribute("id"); c.querySelectorAll("[id]").forEach(e => e.removeAttribute("id")); $("#sheet .in").appendChild(c); } // copy for the mobile sheet, without duplicate ids
+const mark = i => $$("[data-i]").forEach(b => b.classList.toggle("on", +b.dataset.i === OWNER[i]));
+addEventListener("message", e => { if (e.data && typeof e.data.karyar === "number") mark(e.data.karyar); });
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-i]"); if (!b) return;
+  $("#app").contentWindow.postMessage({ karyarGo: +b.dataset.i }, "*");
+  $("#sheet").classList.remove("open");
+});
+// same formula as apps/admin-panel: k = min(free width / 1440, free height / 1076)
+const fit = () => {
+  const mob = innerWidth <= 900, d = $(".device"), f = $("#app");
+  const aw = mob ? innerWidth : innerWidth - 40 - 270 - 48, ah = mob ? innerHeight : innerHeight - 140; // 70px air above and below the frame
+  // same width as the admin-panel frame; on desktop the height matches the screen list beside it, top to bottom
+  // (Karyar's pages stretch to whatever height the window gives them)
+  const k = Math.min(aw / 1440, ah / 1076, (mob ? innerHeight : ah) / 746);
+  const h = mob ? 746 * k : $("#panel").offsetHeight;
+  d.style.width = 1440 * k + "px"; d.style.height = h + "px";
+  f.style.transform = `scale(${k})`; f.style.height = h / k + "px";
+};
+addEventListener("resize", fit); fit();
+$("#fab").onclick = () => $("#sheet").classList.add("open");
+$("#sheet").onclick = e => { if (e.target.id === "sheet") $("#sheet").classList.remove("open"); };
+</script>
+</body>
+</html>

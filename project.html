@@ -34,7 +34,9 @@
   const P = window.PROJECTS;
   const id = new URLSearchParams(location.search).get("id");
   const i = P.findIndex(p => p.id === id);
+  // unknown id: go back to the work list instead of rendering an empty "undefined" page
   if (i < 0) location.replace("index.html#work");
+  else {
   const p = { ...P[i], ...(window.STORIES?.[id] || {}) };
   const next = P[(i + 1) % P.length];
 
@@ -178,14 +180,28 @@
   const setBar = () => { const h = document.documentElement.scrollHeight - innerHeight; bar.style.transform = `scaleX(${h > 0 ? scrollY / h : 0})`; };
   addEventListener("scroll", setBar, { passive: true }); setBar();
 
-  // Full-size viewer for design images
+  // Full-size viewer for design images (mouse and keyboard)
   const lb = document.querySelector(".lightbox"), lbImg = lb.querySelector("img");
-  const closeLb = () => { lb.classList.remove("open"); document.body.classList.remove("no-scroll"); };
-  document.querySelectorAll(".cs-design figure, .ds-card").forEach(f => f.addEventListener("click", () => {
-    const im = f.querySelector("img"); lbImg.src = im.src; lbImg.alt = im.alt;
+  let lbFrom = null;
+  const closeLb = () => {
+    if (!lb.classList.contains("open")) return;
+    lb.classList.remove("open"); document.body.classList.remove("no-scroll");
+    lbFrom?.focus({ preventScroll: true }); lbFrom = null;
+  };
+  const openLb = f => {
+    const im = f.querySelector("img"); if (!im) return;
+    lbImg.src = im.src; lbImg.alt = im.alt; lbFrom = f;
     lb.classList.add("open"); lb.scrollTop = 0; document.body.classList.add("no-scroll");
-  }));
+    lb.querySelector(".lightbox-close").focus({ preventScroll: true });
+  };
+  document.querySelectorAll(".cs-design figure, .ds-card").forEach(f => {
+    f.tabIndex = 0; f.setAttribute("role", "button"); f.setAttribute("aria-label", "View full size: " + (f.querySelector("img")?.alt || ""));
+    f.addEventListener("click", () => openLb(f));
+    f.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openLb(f); } });
+  });
   lb.addEventListener("click", closeLb);
+  // keep Tab inside the open viewer
+  lb.addEventListener("keydown", e => { if (e.key === "Tab") { e.preventDefault(); lb.querySelector(".lightbox-close").focus(); } });
 
   // Wide diagrams (BPMS): drag with the mouse to scroll sideways
   document.querySelectorAll("[data-drag]").forEach(el => {
@@ -196,6 +212,7 @@
   });
 
   addEventListener("keydown", e => { if (e.key === "Escape") closeLb(); });
+  }
 </script>
 </body>
 </html>

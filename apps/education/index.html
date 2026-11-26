@@ -1,0 +1,447 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>My Symposium — Prototype</title>
+<link rel="icon" href="../../images/avatar.png">
+<style>
+/* the design file's own typeface (FaNum: digits always render Persian) */
+@font-face{font-family:Bakh;src:url(../../Font/YekanBakhFaNum-Regular.ttf) format("truetype");font-weight:400;font-display:swap}
+@font-face{font-family:Bakh;src:url(../../Font/YekanBakhFaNum-SemiBold.ttf) format("truetype");font-weight:600;font-display:swap}
+@font-face{font-family:Bakh;src:url(../../Font/YekanBakhFaNum-Bold.ttf) format("truetype");font-weight:700;font-display:swap}
+/* Every screen is laid out on the Figma frame grid (412 × 917); positions come straight from the design file. */
+:root{--p:#0E549C;--bg:#F7F7F7;--g3:#D0D5DD;--g5:#667085;--g6:#475467;--g7:#344054;--g8:#1D2939;--err:#D92D20;--ok:#027A48;--ease:cubic-bezier(.22,1,.36,1)}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overscroll-behavior:none}
+html{overflow-x:hidden}
+body{direction:ltr;background:#17181B;font-family:Bakh,Tahoma,sans-serif;color:var(--g8);display:flex;align-items:center;justify-content:center;gap:56px;padding:20px}
+button,input{font:inherit;color:inherit}
+button{background:none;border:0;cursor:pointer}
+img{display:block}
+
+/* desktop presentation — same shell as the other live prototypes */
+.panel{direction:ltr;font-family:"Segoe UI",system-ui,sans-serif;color:#EDEDED;width:270px;max-height:calc(100vh - 40px);overflow:auto;scrollbar-width:thin;scrollbar-color:#333 transparent}
+.panel a.back{color:#9a9a9a;text-decoration:none;font-size:13px}
+.panel a.back:hover{color:#fff}
+.panel h1{font-size:21px;font-weight:700;margin:12px 0 6px;line-height:1.25}
+.panel p{font-size:12.5px;color:#9a9a9a;line-height:1.55;margin-bottom:6px}
+.panel p b{color:#ddd;font-weight:600}
+.panel h6{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:#6f6f6f;margin:14px 0 4px 12px}
+.panel nav{display:flex;flex-direction:column;gap:1px}
+.panel nav button{display:block;text-align:left;padding:6px 12px;border-radius:8px;color:#cfcfcf;font-size:13px;font-family:inherit}
+.panel nav button:hover{background:#232428}
+.panel nav button.on{background:#2A2C30;color:#fff;box-shadow:inset 3px 0 0 var(--p)}
+.device{width:432px;height:937px;border-radius:56px;background:#0B0B0C;padding:10px;box-shadow:0 30px 80px rgba(0,0,0,.5),inset 0 0 0 2px #2a2a2e;flex:none}
+.app{direction:rtl;position:relative;width:412px;height:917px;border-radius:46px;overflow:hidden;background:var(--bg);line-height:1.8}
+
+/* screens */
+.screen{position:absolute;inset:0;background:var(--bg);opacity:0;visibility:hidden;transition:opacity .3s var(--ease),visibility 0s .3s}
+.screen.on{opacity:1;visibility:visible;transition:opacity .3s var(--ease)}
+.a{position:absolute}
+.ctr{left:0;right:0;text-align:center}
+.h4{font-size:20px;font-weight:700;color:var(--g8)}
+.body{font-size:16px;font-weight:600;color:var(--g5)}
+
+/* page-edge tint bands (colour per state) */
+.band{left:0;width:412px;pointer-events:none;transition:background .35s}
+.band.t{top:0;height:206px;background:linear-gradient(rgba(var(--c),var(--a1,.05)),rgba(var(--c),0))}
+.band.b{top:868px;height:49px;background:linear-gradient(rgba(var(--c),0),rgba(var(--c),var(--a2,.05)))}
+.tint{--c:14,84,156}
+.tint.ok{--c:3,152,85}
+.tint.bad{--c:255,10,6;--a1:.04;--a2:.04}
+
+/* status bar */
+/* the phone status bar uses the system font with Latin digits, as in the design */
+.sb{left:24px;top:16px;width:364px;height:12px;direction:ltr;color:#717171;font-family:Roboto,"Segoe UI",Arial,sans-serif;font-weight:400;font-size:13px;letter-spacing:-.3px;line-height:12px;z-index:5;pointer-events:none}
+.sb>*{position:absolute;top:0}
+.sb .bars{display:flex;align-items:flex-end;gap:1px;width:7px;height:9px;top:2px}
+.sb .bars i{width:1px;background:#717171}
+.sb .bars.w i:not(:first-child){background:#BEBEBE}
+.sb .bat{left:356px;top:0;width:7px;height:11px}
+
+/* buttons */
+.btn{left:48px;width:316px;height:48px;border-radius:6px;background:var(--p);color:#fff;font-size:16px;font-weight:600;box-shadow:0 2px 4px rgba(0,0,0,.05);display:flex;align-items:center;justify-content:center;gap:8px;transition:background .2s,color .2s,box-shadow .2s,transform .12s}
+.btn:hover{background:#0B4683}
+.btn:active{transform:scale(.985)}
+.btn:focus-visible{outline:2px solid var(--p);outline-offset:3px}
+.btn.off,.btn.off:hover{background:var(--g3);cursor:default;transform:none}
+.btn.ghost{background:var(--bg);color:var(--p);box-shadow:0 2px 4px rgba(0,0,0,.05),inset 0 0 0 1px #84A6C8}
+.btn.ghost:hover{background:#EEF3F9}
+
+/* splash */
+@keyframes spin{to{transform:rotate(360deg)}}
+.spin{animation:spin 1s linear infinite}
+
+/* update */
+.chk{right:48px;display:flex;align-items:center;gap:10px;height:29px}
+.chk i{width:16px;height:16px;border-radius:2px;background:var(--p);display:grid;place-items:center;flex:none}
+
+/* onboarding */
+.onb-art{left:37px;top:0;width:338px;height:484px}
+.onb-art img{position:absolute;inset:0;width:100%;height:100%;transition:opacity .35s var(--ease),transform .45s var(--ease)}
+.onb-art img:not(.on){opacity:0;transform:translateX(-14px)}
+.onb-txt{transition:opacity .25s}
+.onb-txt.fade{opacity:0}
+.dots{left:184px;top:694px;width:44px;height:14px;display:flex;align-items:center;justify-content:center;gap:3px;direction:ltr}
+.dots button{width:7px;height:7px;border-radius:50%;background:#D8D8D8;padding:0;transition:all .25s var(--ease)}
+.dots button.on{width:14px;height:14px;background:radial-gradient(circle,#1347AE 0 4px,#C9E0F7 4.5px)}
+
+/* hero (login / otp) */
+.hero{left:65px;top:63px;width:281.6px;height:281.6px}
+/* the exported PNG carries the frame's flat background; fade its square edges so the page tint shows through */
+.hero img{position:absolute;inset:0;width:100%;height:100%;-webkit-mask:radial-gradient(closest-side,#000 70%,transparent 100%);mask:radial-gradient(closest-side,#000 70%,transparent 100%);opacity:0;transform:scale(.96);transition:opacity .35s var(--ease),transform .45s var(--ease)}
+.hero img.on{opacity:1;transform:none}
+
+/* phone input */
+.ph{left:48px;top:521px;width:316px;height:46px;direction:ltr;filter:drop-shadow(0 1px 1px rgba(16,24,40,.05))}
+.ph .add{position:absolute;left:0;top:0;width:77px;height:46px;border:1px solid var(--g3);border-right:0;border-radius:8px 0 0 8px;background:var(--bg);display:flex;align-items:center;gap:4px;padding-left:14px;font-size:16px;font-weight:600;color:var(--g5)}
+.ph .tx{position:absolute;left:76px;top:0;width:240px;height:46px;border:1px solid var(--g3);border-radius:0 8px 8px 0;background:var(--bg);transition:border-color .2s,box-shadow .2s}
+.ph .tx:hover{border-color:#98A2B3}
+.ph.focus .tx{border-color:var(--p);box-shadow:0 0 0 4px rgba(14,84,156,.1)}
+.ph.err .tx{border-color:var(--err);box-shadow:0 0 0 4px rgba(225,58,53,.1)}
+.ph input{width:100%;height:100%;border:0;outline:0;background:none;padding:0 11px;font-size:16px;font-weight:600;color:var(--g6);direction:ltr;text-align:left;letter-spacing:0}
+.ph input::placeholder{font-size:12px;font-weight:400;color:#909090}
+.perr{right:48px;top:577px;font-size:12px;color:var(--err);opacity:0;transform:translateY(-4px);transition:opacity .2s,transform .2s}
+.err-on .perr{opacity:1;transform:none}
+.terms{left:46px;top:583px;width:318px;height:22px;display:flex;align-items:center;gap:4px;font-size:12px;color:var(--g5);transition:top .25s var(--ease);cursor:pointer;user-select:none}
+.err-on .terms{top:607px}
+.terms b{font-weight:600;color:var(--p)}
+.terms b:hover{text-decoration:underline}
+.cb{width:18px;height:18px;flex:none;border:1px solid #ADADAD;border-radius:4px;display:grid;place-items:center;transition:background .15s,border-color .15s;margin-top:1px}
+.cb svg{opacity:0;transition:opacity .15s}
+.terms.on .cb{background:var(--p);border-color:var(--p)}
+.terms.on .cb svg{opacity:1}
+.terms.need .cb{border-color:var(--err)}
+@keyframes shake{20%,60%{transform:translateX(-4px)}40%,80%{transform:translateX(4px)}}
+.shake{animation:shake .32s}
+
+/* otp */
+.otp{left:54px;top:521px;width:304px;height:58px;display:flex;gap:24px;direction:ltr;cursor:text}
+.otp i{width:58px;height:58px;border:1px solid var(--g3);border-radius:6px;display:grid;place-items:center;font-style:normal;font-size:24px;font-weight:600;color:var(--p);transition:border-color .2s,color .2s,box-shadow .2s}
+.otp i.f{border-color:var(--p)}
+.otp.focus:not(.ok):not(.bad) i.cur{border-color:var(--p);box-shadow:0 0 0 4px rgba(14,84,156,.1)}
+@keyframes blink{50%{opacity:0}}
+.otp.focus:not(.ok):not(.bad) i.cur:empty::after{content:"";width:1.5px;height:24px;background:var(--p);animation:blink 1s steps(1) infinite}
+.otp.ok i{border-color:var(--ok);color:var(--ok)}
+.otp.bad i{border-color:var(--err);color:var(--err)}
+.otp input{position:absolute;inset:0;opacity:0;width:100%;height:100%;border:0;font-size:16px;caret-color:transparent}
+.lnk{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--p);height:22px;white-space:nowrap}
+button.lnk:hover span{text-decoration:underline}
+.timer{right:54px;top:601px}
+.timer .lbl{color:var(--g5)}
+.edit{right:54px;top:637px}
+.ntoast{left:48px;top:737px;width:316px;height:36px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;opacity:0;transform:translateY(6px);visibility:hidden;transition:opacity .3s var(--ease),transform .3s var(--ease),visibility 0s .3s;pointer-events:none}
+.ntoast.show{opacity:1;transform:none;pointer-events:auto;visibility:visible;transition:opacity .3s var(--ease),transform .3s var(--ease)}
+.ntoast.ok{background:rgba(2,122,72,.06);color:var(--ok)}
+.ntoast.bad{background:rgba(217,45,32,.06);color:var(--err)}
+.ntoast button{position:absolute;right:8px;top:10px;width:16px;height:16px}
+.ntoast button img{width:16px;height:16px}
+.ntoast button[hidden]{display:none}
+
+/* "not in this version" toast — same as the other prototypes */
+.toast{position:absolute;left:50%;top:56px;z-index:40;transform:translate(-50%,-12px);background:#2E2E2E;color:#fff;font-size:12.5px;line-height:1.5;padding:11px 16px;border-radius:12px;display:flex;gap:8px;align-items:center;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .35s var(--ease),transform .45s var(--ease);box-shadow:0 10px 24px rgba(0,0,0,.25)}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+@media(prefers-reduced-motion:reduce){.screen,.onb-art img,.hero img,.ntoast,.toast,.terms,.perr{transition:none}.spin,.shake,.otp.focus i.cur:empty::after{animation:none!important}}
+
+/* mobile: the app fills the screen and is scaled to the phone's width */
+.menu-fab,.sheet{display:none}
+@media (max-width:560px){
+  body{padding:0;display:block;background:var(--bg);overflow:hidden;position:fixed;inset:0;width:100%}
+  .panel{display:none}
+  .device{width:100%;height:100dvh;border-radius:0;padding:0;box-shadow:none;background:none;overflow:hidden}
+  .app{border-radius:0}
+  .menu-fab{display:grid;place-items:center;position:fixed;top:max(4px,env(safe-area-inset-top));right:50%;transform:translateX(50%);z-index:80;height:22px;padding:0 10px;border-radius:11px;background:rgba(0,0,0,.35);color:#fff;font:600 10.5px "Segoe UI",system-ui,sans-serif;direction:ltr;backdrop-filter:blur(6px)}
+  .sheet{display:block;position:fixed;inset:0;z-index:90;background:rgba(0,0,0,.45);opacity:0;visibility:hidden;transition:.2s}
+  .sheet.open{opacity:1;visibility:visible}
+  .sheet .in{position:absolute;left:0;right:0;bottom:0;max-height:80vh;overflow:auto;background:#1E1F22;border-radius:20px 20px 0 0;padding:18px 16px max(20px,env(safe-area-inset-bottom));transform:translateY(100%);transition:transform .25s}
+  .sheet.open .in{transform:none}
+  .sheet .panel{display:block;width:auto;max-height:none}
+}
+</style>
+</head>
+<body>
+
+<aside class="panel" id="panel">
+  <a class="back" href="../../project.html?id=education">← Back to case study</a>
+  <h1>My Symposium — Redesign<br>Interactive prototype</h1>
+  <p>The redesigned intro and sign-in flow, rebuilt from the Figma file on the design’s own grid: splash, app update, onboarding, mobile number and verification code.</p>
+  <p>Any mobile number starting with <b>9</b> works (10 digits). Verification code <b>1234</b> signs you in; any other code shows the error state.</p>
+  <div id="screenNav"></div>
+</aside>
+
+<div class="device"><div class="app" id="app">
+
+  <!-- ============ Splash ============ -->
+  <section class="screen" id="splash" data-group="Intro" data-title="Splash">
+    <img class="a" src="img/logo.png" alt="سمپوزیوم من" style="left:101.5px;top:352.5px;width:209px;height:212px;object-fit:cover">
+    <img class="a spin" src="img/loading.svg" alt="" style="left:190px;top:685px;width:32px;height:32px">
+    <div class="a ctr" style="top:870px;font-size:14px;line-height:20px;color:var(--g8)">نسخه 01.1</div>
+  </section>
+
+  <!-- ============ Update (optional) ============ -->
+  <section class="screen tint" id="update" data-group="Intro" data-title="App update">
+    <div class="a band t"></div><div class="a band b" style="--a2:.1"></div>
+    <img class="a" src="img/logo.png" alt="سمپوزیوم من" style="left:125px;top:85px;width:163px;height:165px;object-fit:cover">
+    <div class="a ctr h4" style="top:307px">به‌روزرسانی</div>
+    <p class="a body upd-p" style="left:48px;top:384px;width:316px;text-align:right">نــسـخـه جــدیــد <b style="font-weight:700;color:var(--g6)">ســمــپــوزیـوم مــن</b> مـوجـود اســت. بــرای دسـترسی بـه عـمـلـکرد بـهتـر و قـابـلیـت‌هـای جدیدتـر به آخـرین نسـخه به‌روزرسـانی کـنیـد.</p>
+    <div class="a" style="right:48px;top:495px;font-size:18px;font-weight:700;color:var(--g7)">تغییرات نسخه جدید :</div>
+    <div class="a chk body" style="top:539px"><i><img src="img/ic-check-small.svg" alt="" width="8" height="8"></i>افزودن رویداد‌های بیشتر</div>
+    <div class="a chk body" style="top:578px"><i><img src="img/ic-check-small.svg" alt="" width="8" height="8"></i>رابط کاربری بهینه شده</div>
+    <div class="a chk body" style="top:617px"><i><img src="img/ic-check-small.svg" alt="" width="8" height="8"></i>رفع باگ‌های موجود</div>
+    <button class="a btn na" style="top:737px"><img src="img/ic-download.svg" alt="" width="24" height="24">دانلود مستقیم</button>
+    <button class="a btn ghost" style="top:801px" data-go="onb">بعداً به‌روزرسانی می‌کنم</button>
+  </section>
+
+  <!-- ============ Update (required) ============ -->
+  <section class="screen tint" id="force" data-group="Intro" data-title="Required update">
+    <div class="a band t"></div><div class="a band b" style="--a2:.1"></div>
+    <img class="a" src="img/logo.png" alt="سمپوزیوم من" style="left:125px;top:85px;width:163px;height:165px;object-fit:cover">
+    <div class="a ctr h4" style="top:307px">به‌روزرسانی</div>
+    <p class="a body upd-p" style="left:48px;top:384px;width:316px;text-align:right">نــسـخـه جــدیــد <b style="font-weight:700;color:var(--g6)">ســمــپــوزیـوم مــن</b> مـوجـود اســت. بــرای دسـترسی بـه عـمـلـکرد بـهتـر و قـابـلیـت‌هـای جدیدتـر به آخـرین نسـخه به‌روزرسـانی کـنیـد.</p>
+    <div class="a" style="right:48px;top:495px;font-size:18px;font-weight:700;color:var(--g7)">تغییرات نسخه جدید :</div>
+    <div class="a chk body" style="top:539px"><i><img src="img/ic-check-small.svg" alt="" width="8" height="8"></i>افزودن رویداد‌های بیشتر</div>
+    <div class="a chk body" style="top:578px"><i><img src="img/ic-check-small.svg" alt="" width="8" height="8"></i>رابط کاربری بهینه شده</div>
+    <div class="a chk body" style="top:617px"><i><img src="img/ic-check-small.svg" alt="" width="8" height="8"></i>رفع باگ‌های موجود</div>
+    <button class="a btn na" style="top:801px"><img src="img/ic-download.svg" alt="" width="24" height="24">دانلود مستقیم</button>
+  </section>
+
+  <!-- ============ Onboarding (4 pages, one screen) ============ -->
+  <section class="screen" id="onb" data-group="Intro" data-title="Onboarding">
+    <div class="a onb-art" id="onbArt">
+      <img src="img/onb1-illus.png" alt="" class="on"><img src="img/onb2-illus.png" alt=""><img src="img/onb3-illus.png" alt=""><img src="img/onb4-illus.png" alt="">
+    </div>
+    <div class="onb-txt" id="onbTxt">
+      <div class="a ctr h4" style="top:535px" id="onbT"></div>
+      <p class="a body" style="left:16px;top:583px;width:380px;text-align:center" id="onbD"></p>
+    </div>
+    <div class="a dots" id="onbDots" aria-label="صفحه‌ها"></div>
+    <button class="a btn" style="left:259px;top:807px;width:129px;height:42px" id="onbNext">بعدی</button>
+  </section>
+
+  <!-- ============ Login / sign up ============ -->
+  <section class="screen tint" id="login" data-group="Sign in" data-title="Login / sign up">
+    <div class="a band t"></div><div class="a band b"></div>
+    <div class="a hero"><img src="img/hero-lock.png" alt="" class="on"></div>
+    <div class="a ctr h4" style="top:374px">ورود یا ثبت‌نام</div>
+    <div class="a ctr body" style="top:420px">لطفا شماره موبایل خود را وارد کنید.</div>
+    <div class="a ph" id="ph">
+      <div class="add"><img src="img/flag-ir.png" alt="" width="20" height="20">+98</div>
+      <div class="tx"><input id="phIn" type="tel" inputmode="numeric" autocomplete="tel-national" placeholder="۰۰۰ ۰۰۰ ۰۰۰0" aria-label="شماره موبایل" maxlength="16"></div>
+    </div>
+    <div class="a perr" id="phErr" role="alert">شماره موبایل وارد شده نادرست است!</div>
+    <div class="a terms" id="terms" role="checkbox" aria-checked="false" tabindex="0">
+      <span class="cb"><svg width="10" height="8" viewBox="0 0 10 8"><path d="M1 4l2.6 2.6L9 1.2" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      <span>با قوانین و شرایط استفاده از <b class="na">سمپوزیوم من</b> موافق هستم.</span>
+    </div>
+    <button class="a btn off" style="top:801px" id="phGo">تایید</button>
+  </section>
+
+  <!-- ============ Verification code ============ -->
+  <section class="screen tint" id="otp" data-group="Sign in" data-title="Verification code">
+    <div class="a band t"></div><div class="a band b"></div>
+    <div class="a hero" id="otpHero">
+      <img src="img/hero-mail.png" alt="" data-h="empty" class="on"><img src="img/hero-mail-open.png" alt="" data-h="filled"><img src="img/hero-check.png" alt="" data-h="ok"><img src="img/hero-x.png" alt="" data-h="bad">
+    </div>
+    <div class="a ctr h4" style="top:374px">ورود یا ثبت‌نام</div>
+    <p class="a body" style="left:48px;top:420px;width:316px;text-align:center">کد تایید<br>به شماره موبایل <span id="otpNum">09226079676</span> ارسال شد.</p>
+    <label class="a otp" id="otpBox"><i></i><i></i><i></i><i></i><input id="otpIn" type="tel" inputmode="numeric" autocomplete="one-time-code" maxlength="4" aria-label="کد تایید ۴ رقمی"></label>
+    <div class="a timer lnk" id="timer"></div>
+    <button class="a edit lnk" data-go="login"><img src="img/ic-edit.svg" alt="" width="16" height="16"><span>ویرایش شماره موبایل</span></button>
+    <div class="a ntoast" id="otpToast" role="status"><span></span><button aria-label="بستن"><img alt=""></button></div>
+    <button class="a btn off" style="top:801px" id="otpGo">تایید</button>
+  </section>
+
+  <div class="toast" id="toast" role="status"></div>
+</div></div>
+
+<button class="menu-fab" id="fab">Screens ▾</button>
+<div class="sheet" id="sheet"><div class="in"></div></div>
+
+<script>
+const NA = "در این نسخه در دسترس نیست";
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const toEn = s => s.replace(/[۰-۹]/g, d => "۰۱۲۳۴۵۶۷۸۹".indexOf(d)).replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d));
+
+/* status bar on every screen (time · wifi · two signal bars · 100% · battery) */
+const SB = `<div class="a sb" aria-hidden="true"><span style="left:1px">13:36</span>
+  <img src="img/sb-wifi.svg" alt="" style="left:295px;top:2px;width:12px;height:9px">
+  <span class="bars w" style="left:309px"><i style="height:2px"></i><i style="height:4px"></i><i style="height:7px"></i><i style="height:9px"></i></span>
+  <span class="bars" style="left:318px"><i style="height:2px"></i><i style="height:4px"></i><i style="height:7px"></i><i style="height:9px"></i></span>
+  <span style="right:10px">100%</span>
+  <svg class="bat" viewBox="0 0 7 11"><rect x="1" y="0" width="5" height="1.2" rx=".3" fill="#717171"/><rect x="0" y="1" width="7" height="10" rx=".8" fill="#717171"/></svg></div>`;
+$$(".screen").forEach(s => s.insertAdjacentHTML("afterbegin", SB));
+
+/* ================= toast / routing ================= */
+let tId;
+function toast(msg = NA) {
+  const t = $("#toast");
+  t.innerHTML = '<svg width="15" height="15" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="none" stroke="#F5A524" stroke-width="1.4"/><path d="M8 4.5v4.5" stroke="#F5A524" stroke-width="1.6" stroke-linecap="round"/><circle cx="8" cy="11.4" r=".9" fill="#F5A524"/></svg>' + msg;
+  t.classList.add("show"); clearTimeout(tId); tId = setTimeout(() => t.classList.remove("show"), 2200);
+}
+const screens = $$(".screen");
+const ENTER = {}, LEAVE = {};
+let current = null;
+function go(id) {
+  if (!$("#" + id)?.classList.contains("screen")) id = "splash";
+  if (current && current !== id) (LEAVE[current] || (() => {}))();
+  current = id;
+  screens.forEach(s => s.classList.toggle("on", s.id === id));
+  $$("[data-screen]").forEach(b => b.classList.toggle("on", b.dataset.screen === id));
+  history.replaceState(null, "", "#" + id);
+  $("#sheet").classList.remove("open");
+  (ENTER[id] || (() => {}))();
+}
+
+/* presentation nav — one entry per screen; states (typing, error, success …) are reached by using the screen */
+let groupNow = "";
+$("#screenNav").innerHTML = screens.map(s => {
+  let h = "";
+  if (s.dataset.group !== groupNow) { h += `${groupNow ? "</nav>" : ""}<h6>${s.dataset.group}</h6><nav>`; groupNow = s.dataset.group; }
+  return h + `<button data-screen="${s.id}">${s.dataset.title}</button>`;
+}).join("") + "</nav>";
+{ const c = $("#panel").cloneNode(true); c.removeAttribute("id"); c.querySelectorAll("[id]").forEach(e => e.removeAttribute("id")); $("#sheet .in").appendChild(c); } // copy for the mobile sheet, without duplicate ids
+
+document.addEventListener("click", e => {
+  const t = e.target;
+  const s = t.closest("[data-screen]"); if (s) return go(s.dataset.screen);
+  if (t.closest(".na")) { e.preventDefault(); e.stopPropagation(); return toast(); }
+  const g = t.closest("[data-go]"); if (g) return go(g.dataset.go);
+}, true);
+$("#fab").onclick = () => $("#sheet").classList.add("open");
+$("#sheet").onclick = e => { if (e.target.id === "sheet") $("#sheet").classList.remove("open"); };
+
+const fit = () => {
+  const app = $("#app"), dev = $(".device"), z = new URLSearchParams(location.search).get("zoom");
+  if (innerWidth <= 560) { const k = innerWidth / 412; dev.style.zoom = ""; app.style.zoom = k; app.style.height = (innerHeight / k) + "px"; }
+  else { app.style.zoom = ""; app.style.height = "917px"; dev.style.zoom = z || Math.min(.8, (innerHeight - 40) / 937).toFixed(3); }
+};
+addEventListener("resize", fit); fit();
+
+/* ================= splash → update ================= */
+let splashT;
+ENTER.splash = () => { clearTimeout(splashT); splashT = setTimeout(() => current === "splash" && go("update"), 2400); };
+LEAVE.splash = () => clearTimeout(splashT);
+
+/* ================= onboarding ================= */
+const ONB = [
+  ["ثبت نام در رویداد", "در اپلیکیشن سمپوزیوم من می‌توانید ثبت نام خود و همکارانتان در رویداد را با چند کلیک ساده انجام دهید."],
+  ["اعلام حضور در رویداد", "در روز برگزاری رویداد با QR کد درون اپلیکیشن می‌توانید حضور خود را به ثبت برسانید."],
+  ["دسترسی به اطلاعات و محتوای رویداد", "می‌توانید جزئیات برنامه رویداد، اطلاعات سخنرانان، حامیان و محتوای ارائه‌ها و ورکشاپ‌ها را مشاهده و دانلود کنید."],
+  ["و چندین قابلیت دیگر", "اطلاع رسانی‌ها و سایر قابلیت‌های ضروری دیگر نیز در اپلیکیشن سمپوزیوم من در اختیار شما خواهد بود."],
+];
+let page = 0;
+// as in the design, the active dot advances left → right
+$("#onbDots").innerHTML = ONB.map((_, i) => `<button aria-label="صفحه ${i + 1}" data-p="${i}"></button>`).join("");
+function setPage(i, anim = true) {
+  page = i;
+  $$("#onbArt img").forEach((im, k) => im.classList.toggle("on", k === i));
+  $$("#onbDots button").forEach((b, k) => b.classList.toggle("on", k === i));
+  const put = () => { $("#onbT").textContent = ONB[i][0]; $("#onbD").textContent = ONB[i][1]; $("#onbTxt").classList.remove("fade"); };
+  if (!anim) return put();
+  $("#onbTxt").classList.add("fade"); setTimeout(put, 180);
+}
+ENTER.onb = () => setPage(0, false);
+$("#onbNext").onclick = () => page < ONB.length - 1 ? setPage(page + 1) : go("login");
+$("#onbDots").onclick = e => { const b = e.target.closest("[data-p]"); if (b && +b.dataset.p !== page) setPage(+b.dataset.p); };
+// swipe between pages on touch screens (RTL: swiping right→left goes back, left→right goes forward)
+let sx = null;
+$("#onb").addEventListener("pointerdown", e => sx = e.clientX);
+$("#onb").addEventListener("pointerup", e => {
+  if (sx === null) return; const dx = e.clientX - sx; sx = null;
+  if (Math.abs(dx) < 40) return;
+  if (dx > 0 && page < ONB.length - 1) setPage(page + 1); else if (dx < 0 && page > 0) setPage(page - 1);
+});
+
+/* ================= login: mobile number ================= */
+const phIn = $("#phIn"), ph = $("#ph"), login = $("#login"), terms = $("#terms"), phGo = $("#phGo");
+let digits = "";
+const fmt = d => [d.slice(0, 3), d.slice(3, 6), d.slice(6, 10)].filter(Boolean).join(" ");
+const phValid = () => /^9\d{9}$/.test(digits);
+function phState(showErr) {
+  // wrong prefix shows the error right away; an incomplete number only once the field is left
+  const bad = (digits && digits[0] !== "9") || (showErr && digits && !phValid());
+  ph.classList.toggle("err", !!bad); login.classList.toggle("err-on", !!bad);
+  phGo.classList.toggle("off", !phValid());
+}
+phIn.addEventListener("input", () => {
+  let d = toEn(phIn.value).replace(/\D/g, "");
+  if (d.startsWith("98") && d.length > 10) d = d.slice(2);
+  if (d.startsWith("0")) d = d.replace(/^0+/, "");
+  digits = d.slice(0, 10); phIn.value = fmt(digits);
+  phState(false);
+});
+phIn.addEventListener("focus", () => ph.classList.add("focus"));
+phIn.addEventListener("blur", () => { ph.classList.remove("focus"); phState(true); });
+phIn.addEventListener("keydown", e => { if (e.key === "Enter") phGo.click(); });
+const toggleTerms = () => { const on = !terms.classList.contains("on"); terms.classList.toggle("on", on); terms.classList.remove("need"); terms.setAttribute("aria-checked", on); };
+terms.addEventListener("click", e => { if (!e.target.closest(".na")) toggleTerms(); });
+terms.addEventListener("keydown", e => { if (e.key === " " || e.key === "Enter") { e.preventDefault(); toggleTerms(); } });
+const shake = el => { el.classList.remove("shake"); void el.offsetWidth; el.classList.add("shake"); el.addEventListener("animationend", () => el.classList.remove("shake"), { once: true }); };
+phGo.onclick = () => {
+  if (!phValid()) { phState(true); if (digits) shake(ph); else phIn.focus(); return; }
+  if (!terms.classList.contains("on")) { terms.classList.add("need"); shake(terms); return; }
+  $("#otpNum").textContent = "0" + digits;
+  go("otp");
+};
+ENTER.login = () => setTimeout(() => current === "login" && phIn.focus({ preventScroll: true }), 320);
+
+/* ================= verification code ================= */
+const CODE = "1234";
+const otpIn = $("#otpIn"), otpBox = $("#otpBox"), otpGo = $("#otpGo"), otpScr = $("#otp"), otpToast = $("#otpToast");
+let otpSt = "empty", left = 0, tick;
+function otpState(st) {
+  otpSt = st;
+  const v = otpIn.value;
+  $$("i", otpBox).forEach((c, k) => { c.textContent = v[k] || ""; c.classList.toggle("f", !!v[k]); c.classList.toggle("cur", k === Math.min(v.length, 3)); });
+  otpBox.classList.toggle("ok", st === "ok"); otpBox.classList.toggle("bad", st === "bad");
+  otpScr.classList.toggle("ok", st === "ok"); otpScr.classList.toggle("bad", st === "bad");
+  const hero = st === "empty" && v.length ? "filled" : st;
+  $$("#otpHero img").forEach(im => im.classList.toggle("on", im.dataset.h === hero));
+  otpGo.classList.toggle("off", !(v.length === 4 && st !== "bad"));
+  if (st === "ok") note("ok", "شما با موفقیت وارد شدید.");
+  else if (st === "bad") note("bad", "کد وارد شده نامعتبر است!");
+  else otpToast.classList.remove("show");
+  drawTimer();
+}
+function note(kind, msg) {
+  otpToast.className = "a ntoast show " + kind;
+  $("span", otpToast).textContent = msg;
+  $("button img", otpToast).src = `img/ic-close-${kind === "ok" ? "success" : "error"}.svg`;
+}
+$("button", otpToast).onclick = () => otpToast.classList.remove("show");
+// countdown (A) while waiting; the resend link (B) once it runs out or after a wrong code
+function drawTimer() {
+  const t = $("#timer");
+  if (left > 0 && otpSt !== "bad") {
+    t.innerHTML = `<img src="img/ic-clock.svg" alt="" width="16" height="16"><span style="color:var(--p)">${Math.floor(left / 60)}:${String(left % 60).padStart(2, "0")}</span><span class="lbl">تا دریافت مجدد کد</span>`;
+  } else {
+    t.innerHTML = `<button class="lnk" id="resend"><img src="img/ic-time-past.svg" alt="" width="16" height="16"><span>دریافت مجدد کد</span></button>`;
+  }
+}
+function runTimer() { clearInterval(tick); left = 119; drawTimer(); tick = setInterval(() => { left--; if (left <= 0) clearInterval(tick); drawTimer(); }, 1000); }
+$("#timer").addEventListener("click", e => {
+  if (!e.target.closest("#resend")) return;
+  otpIn.value = ""; otpState("empty"); runTimer(); otpIn.focus();
+});
+otpIn.addEventListener("input", () => {
+  otpIn.value = toEn(otpIn.value).replace(/\D/g, "").slice(0, 4);
+  otpState("empty");
+});
+otpIn.addEventListener("focus", () => otpBox.classList.add("focus"));
+otpIn.addEventListener("blur", () => otpBox.classList.remove("focus"));
+otpIn.addEventListener("keydown", e => { if (e.key === "Enter") otpGo.click(); });
+otpGo.onclick = () => {
+  if (otpSt === "ok") return toast();   // the app after sign-in is not part of this design
+  if (otpIn.value.length < 4) return otpIn.focus();
+  if (otpIn.value === CODE) { otpState("ok"); otpIn.blur(); }
+  else { otpState("bad"); shake(otpBox); }
+};
+ENTER.otp = () => { otpIn.value = ""; otpState("empty"); runTimer(); setTimeout(() => current === "otp" && otpIn.focus({ preventScroll: true }), 320); };
+LEAVE.otp = () => clearInterval(tick);
+
+go(location.hash.slice(1) || "splash");
+</script>
+</body>
+</html>

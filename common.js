@@ -8,6 +8,7 @@ const projectUrl = id => `project.html?id=${encodeURIComponent(id)}`;
 const ICONS = {
   telegram: '<path d="M21.5 4.5 2.5 11.6l6.6 2.3m12.4-9.4-3 15-7.6-5.6m10.6-9.4L9.1 13.9m0 0 .6 5.6 3-3.6"/>',
   dribbble: '<circle cx="12" cy="12" r="9"/><path d="M3.7 9.6c4.7.4 10-1.1 13.5-4.6M6.3 18.9c3-4.7 8-6.6 14.5-4.8M8.6 3.7c3.6 4.6 6.2 10.3 7.1 16.7"/>',
+  linkedin: '<rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8 10.5V16M8 7.6v.1M11.5 16v-5.5m0 2.4c0-1.5 1-2.6 2.3-2.6 1.4 0 2.2.9 2.2 2.6V16"/>',
   mail: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3.5 7 8.5 6 8.5-6"/>',
 };
 const icon = name => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[name]}</svg>`;
@@ -37,7 +38,7 @@ function renderFooter() {
   const socials = [
     c.telegram && ["Telegram", c.telegram, "telegram"],
     c.dribbble && ["Dribbble", c.dribbble, "dribbble"],
-    c.linkedin && ["LinkedIn", c.linkedin, "mail"],
+    c.linkedin && ["LinkedIn", c.linkedin, "linkedin"],
     c.email && ["Email", "mailto:" + c.email, "mail"],
   ].filter(Boolean);
   document.getElementById("contact").innerHTML = `

@@ -1,6 +1,7 @@
 window.STORIES = window.STORIES || {};
 window.STORIES["admin-panel"] = {
   tools: "Figma",
+  live: "apps/admin-panel/index.html",
   story: [
     { type: "stats", items: [
       { value: "3", label: "Key panel screens" },

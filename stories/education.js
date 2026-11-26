@@ -2,6 +2,7 @@
 window.STORIES = window.STORIES || {};
 window.STORIES["education"] = {
   tools: "Figma",
+  live: "apps/education/index.html",
   story: [
     { type: "stats", items: [
       { value: "2", label: "Key screens redesigned" },

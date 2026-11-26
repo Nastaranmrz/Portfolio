@@ -218,7 +218,6 @@ section{padding:clamp(56px,8vw,100px) 0}
 .ds-card.none .ds-img{padding:0}
 .ds-img img{width:100%;height:auto;max-height:640px;object-fit:contain}
 @media (max-width:700px){ .ds-card.half,.ds-card.third,.ds-card.two-thirds{grid-column:span 6} }
-
 /* Design section */
 .cs-design-head{display:flex;justify-content:space-between;align-items:baseline;gap:16px;flex-wrap:wrap;margin-bottom:24px}
 .cs-design{display:flex;flex-direction:column;gap:48px}
