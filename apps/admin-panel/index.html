@@ -40,11 +40,15 @@ img{display:block;flex:none}
 .panel nav button:hover{background:#232428}
 .panel nav button.on{background:#2A2C30;color:#fff;box-shadow:inset 3px 0 0 #3D7CC0}
 .device{position:relative;flex:none;border-radius:14px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.5),0 0 0 1px #2a2a2e}
-.menu-fab,.sheet{display:none}
+.menu-fab,.sheet,.pan-hint{display:none}
 @media (max-width:900px){
-  body{padding:0;display:block;background:var(--p9)}
+  /* phones/tablets: the desktop frame keeps a readable size and pans sideways instead of shrinking to a thumbnail */
+  body{padding:0;display:block;background:var(--p9);overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain}
   .panel{display:none}
-  .device{border-radius:0;box-shadow:none;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%)}
+  .device{border-radius:0;box-shadow:none;margin-left:auto;margin-right:auto}
+  .pan-hint{display:block;position:fixed;left:50%;bottom:max(16px,env(safe-area-inset-bottom));transform:translateX(-50%);z-index:80;padding:7px 14px;border-radius:16px;background:rgba(0,0,0,.6);color:#fff;font:600 12px "Segoe UI",system-ui,sans-serif;white-space:nowrap;backdrop-filter:blur(6px);pointer-events:none;transition:opacity .4s}
+  .pan-hint.off{opacity:0}
+  .pan-hint[hidden]{display:none}
   .menu-fab{display:grid;place-items:center;position:fixed;top:6px;left:50%;transform:translateX(-50%);z-index:80;height:24px;padding:0 12px;border-radius:12px;background:rgba(0,0,0,.45);color:#fff;font:600 11px "Segoe UI",system-ui,sans-serif;backdrop-filter:blur(6px)}
   .sheet{display:block;position:fixed;inset:0;z-index:90;background:rgba(0,0,0,.45);opacity:0;visibility:hidden;transition:.2s}
   .sheet.open{opacity:1;visibility:visible}
@@ -464,6 +468,7 @@ img{display:block;flex:none}
   <div id="screenNav"></div>
 </aside>
 
+<div class="pan-hint" id="panHint" hidden>Desktop design · swipe sideways ↔</div>
 <div class="device" id="dev"><div id="stage">
 
 <!-- ================= AUTH ================= -->
@@ -705,14 +710,23 @@ function toast(m = NA) {
 }
 
 /* ================= scaling: the 1440×1076 frame fits the space next to the panel ================= */
+let panW = 0;
 function fit() {
-  const mob = innerWidth <= 900;
-  const aw = mob ? innerWidth : innerWidth - 40 - 270 - 48, ah = mob ? innerHeight : innerHeight - 140; // 70px air above and below the frame
-  const k = Math.min(aw / 1440, ah / 1076);
-  $("#dev").style.width = 1440 * k + "px"; $("#dev").style.height = 1076 * k + "px";
+  const mob = innerWidth <= 900, dev = $("#dev");
+  const aw = innerWidth - 40 - 270 - 48, ah = innerHeight - 140; // desktop: 70px air above and below the frame
+  // tablets: the whole frame fits at ≥50% → show it all, no panning
+  // phones: fit the screen height (at most 75%) so the text stays readable; wider than the screen → pan sideways
+  const whole = Math.min(innerWidth / 1440, innerHeight / 1076);
+  const k = mob ? (whole >= .5 ? whole : Math.min(innerHeight / 1076, .75)) : Math.min(aw / 1440, ah / 1076);
+  dev.style.width = 1440 * k + "px"; dev.style.height = 1076 * k + "px";
+  dev.style.marginTop = mob ? Math.max(0, (innerHeight - 1076 * k) / 2) + "px" : "";
   stage.style.transform = `scale(${k})`;
+  const pans = mob && 1440 * k > innerWidth + 1;
+  $("#panHint").hidden = !pans;
+  if (pans && panW !== innerWidth) { panW = innerWidth; document.body.scrollLeft = document.body.scrollWidth; } // RTL app: start at the right edge
 }
 addEventListener("resize", fit); fit();
+setTimeout(() => $("#panHint").classList.add("off"), 3500);
 
 /* ================= dropdowns ================= */
 function initDD(dd) {
@@ -1162,5 +1176,6 @@ $("#fab").onclick = () => $("#sheet").classList.add("open");
 $("#sheet").onclick = e => { if (e.target.id === "sheet") $("#sheet").classList.remove("open"); };
 
 </script>
+<script src="../screen-pager.js"></script>
 </body>
 </html>

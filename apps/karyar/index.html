@@ -29,12 +29,15 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .device iframe{position:absolute;left:0;top:0;width:1440px;border:0;transform-origin:0 0}
 
 /* mobile: the app fills the screen; the screen list opens from a small button */
-.menu-fab,.sheet{display:none}
+.menu-fab,.sheet,.pan-hint{display:none}
 @media (max-width:900px){
-  body{padding:0;display:block}
+  /* phones/tablets: the desktop site keeps a readable size and pans sideways instead of shrinking to a thumbnail */
+  body{padding:0;display:block;background:#EEF1F6;overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain}
   .panel{display:none}
-  body{background:#EEF1F6}
-  .device{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);border-radius:0;box-shadow:none}
+  .device{border-radius:0;box-shadow:none;margin-left:auto;margin-right:auto}
+  .pan-hint{display:block;position:fixed;left:50%;bottom:max(16px,env(safe-area-inset-bottom));transform:translateX(-50%);z-index:80;padding:7px 14px;border-radius:16px;background:rgba(0,0,0,.6);color:#fff;font:600 12px "Segoe UI",system-ui,sans-serif;white-space:nowrap;backdrop-filter:blur(6px);pointer-events:none;transition:opacity .4s}
+  .pan-hint.off{opacity:0}
+  .pan-hint[hidden]{display:none}
   .menu-fab{display:grid;place-items:center;position:fixed;top:6px;left:50%;transform:translateX(-50%);z-index:80;height:24px;padding:0 12px;border-radius:12px;background:rgba(0,0,0,.45);color:#fff;font:600 11px "Segoe UI",system-ui,sans-serif;backdrop-filter:blur(6px)}
   .sheet{display:block;position:fixed;inset:0;z-index:90;background:rgba(0,0,0,.45);opacity:0;visibility:hidden;transition:.2s}
   .sheet.open{opacity:1;visibility:visible}
@@ -54,6 +57,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
   <div id="screenNav"></div>
 </aside>
 
+<div class="pan-hint" id="panHint" hidden>Desktop site · swipe sideways ↔</div>
 <div class="device"><iframe id="app" src="app.html" title="Karyar prototype"></iframe></div>
 
 <button class="menu-fab" id="fab">Screens ▾</button>
@@ -78,19 +82,29 @@ document.addEventListener("click", e => {
   $("#sheet").classList.remove("open");
 });
 // same formula as apps/admin-panel: k = min(free width / 1440, free height / 1076)
+let panW = 0;
 const fit = () => {
   const mob = innerWidth <= 900, d = $(".device"), f = $("#app");
-  const aw = mob ? innerWidth : innerWidth - 40 - 270 - 48, ah = mob ? innerHeight : innerHeight - 140; // 70px air above and below the frame
-  // same width as the admin-panel frame; on desktop the height matches the screen list beside it, top to bottom
+  const aw = innerWidth - 40 - 270 - 48, ah = innerHeight - 140; // desktop: 70px air above and below the frame
+  // desktop: same width as the admin-panel frame, height matches the screen list beside it, top to bottom
+  // tablets: the whole 1440×1076 frame fits at ≥50% → show it all, centred, no panning
+  // phones: a readable scale (at most 75%) that fills the screen height; wider than the screen → pan sideways
   // (Karyar's pages stretch to whatever height the window gives them)
-  const k = Math.min(aw / 1440, ah / 1076, (mob ? innerHeight : ah) / 746);
-  const h = mob ? 746 * k : $("#panel").offsetHeight;
+  const whole = Math.min(innerWidth / 1440, innerHeight / 1076), tab = mob && whole >= .5;
+  const k = mob ? (tab ? whole : Math.min(innerHeight / 1076, .75)) : Math.min(aw / 1440, ah / 1076, ah / 746);
+  const h = tab ? 1076 * k : mob ? innerHeight : $("#panel").offsetHeight;
   d.style.width = 1440 * k + "px"; d.style.height = h + "px";
+  d.style.marginTop = tab ? (innerHeight - h) / 2 + "px" : "";
   f.style.transform = `scale(${k})`; f.style.height = h / k + "px";
+  const pans = mob && 1440 * k > innerWidth + 1;
+  $("#panHint").hidden = !pans;
+  if (pans && panW !== innerWidth) { panW = innerWidth; document.body.scrollLeft = document.body.scrollWidth; } // RTL site: start at the right edge
 };
 addEventListener("resize", fit); fit();
+setTimeout(() => $("#panHint").classList.add("off"), 3500);
 $("#fab").onclick = () => $("#sheet").classList.add("open");
 $("#sheet").onclick = e => { if (e.target.id === "sheet") $("#sheet").classList.remove("open"); };
 </script>
+<script src="../screen-pager.js"></script>
 </body>
 </html>
