@@ -76,16 +76,18 @@ window.PROJECTS = [
     sections: [],
   },
   {
-    id: "doctor", featured: true, designBg: "#0d0d0d",
-    title: "Doctor Appointment App", year: "2025", platform: "Mobile app", industry: "Healthcare",
-    summary: "Finding a doctor and booking a visit, built on a scalable design system.",
-    tags: ["Mobile app", "User flows"],
+    id: "education", featured: true, designBg: "#0d0d0d",
+    title: "Educational App Redesign", year: "2025", platform: "Mobile app", industry: "Education",
+    summary: "Redesigning a course-registration app with a clearer, friendlier interface.",
+    tags: ["Redesign", "Mobile app"],
     role: "UI/UX Designer", tools: "Figma",
     overview: [
-      "A mobile app for finding doctors and booking appointments, designed to scale to many specialties and clinics.",
+      "This application was originally developed to manage user registration for an educational program, but it suffered from a poor and ineffective user interface and experience. I was assigned to redesign the app with the goal of improving both its UI and UX.",
     ],
-    sections: [],
-    figma: "https://www.figma.com/design/xbHEsfDJmEdWQTgazy6qXf/Doctor-App?node-id=0-1&p=f&t=rw96vTmYeuUl78RL-0",
+    sections: [
+      { title: "Goal", body: ["Create a visually appealing and user-friendly design that offers a smooth, pleasant, yet highly functional experience — making interaction both enjoyable and efficient."] },
+      { title: "Approach", body: ["I applied minimal, user-centered design principles to simplify navigation and improve access to key features. These changes improved the overall experience and helped strengthen user trust and satisfaction with the brand."] },
+    ],
   },
   {
     id: "dashboard", featured: true, designBg: "#0d0d0d",
@@ -109,18 +111,16 @@ window.PROJECTS = [
     sections: [],
   },
   {
-    id: "education", designBg: "#0d0d0d",
-    title: "Educational App Redesign", year: "2025", platform: "Mobile app", industry: "Education",
-    summary: "Redesigning a course-registration app with a clearer, friendlier interface.",
-    tags: ["Redesign", "Mobile app"],
+    id: "doctor", designBg: "#0d0d0d",
+    title: "Doctor Appointment App", year: "2025", platform: "Mobile app", industry: "Healthcare",
+    summary: "Finding a doctor and booking a visit, built on a scalable design system.",
+    tags: ["Mobile app", "User flows"],
     role: "UI/UX Designer", tools: "Figma",
     overview: [
-      "This application was originally developed to manage user registration for an educational program, but it suffered from a poor and ineffective user interface and experience. I was assigned to redesign the app with the goal of improving both its UI and UX.",
+      "A mobile app for finding doctors and booking appointments, designed to scale to many specialties and clinics.",
     ],
-    sections: [
-      { title: "Goal", body: ["Create a visually appealing and user-friendly design that offers a smooth, pleasant, yet highly functional experience — making interaction both enjoyable and efficient."] },
-      { title: "Approach", body: ["I applied minimal, user-centered design principles to simplify navigation and improve access to key features. These changes improved the overall experience and helped strengthen user trust and satisfaction with the brand."] },
-    ],
+    sections: [],
+    figma: "https://www.figma.com/design/xbHEsfDJmEdWQTgazy6qXf/Doctor-App?node-id=0-1&p=f&t=rw96vTmYeuUl78RL-0",
   },
   {
     id: "snapp", designBg: "#0d0d0d",
