@@ -120,7 +120,7 @@ window.CS_BLOCKS = Object.assign(window.CS_BLOCKS || {}, (() => {
   s.textContent = `
     .ps-split{display:grid;grid-template-columns:1.35fr 1fr;gap:clamp(20px,4vw,40px);align-items:center}
     .ps-text p+p{margin-top:14px}
-    .ps-illus{border-radius:var(--radius);overflow:hidden;background:#0F1B2D;border:1px solid #1E2D45}
+    .ps-illus{border-radius:var(--radius);overflow:hidden;background:#161616;border:1px solid #262626}
     .ps-illus img{width:100%;height:auto;display:block}
     .ps-list{list-style:none;display:flex;flex-direction:column;gap:10px}
     .ps-text p + .ps-list{margin-top:14px}

@@ -479,7 +479,7 @@ window.STORIES["mehrino"] = {
     .cs-media:has(> .mh-root) > .cs-media-head{display:none}
     .cs-story:has(.mh-root){padding-bottom:40px}
     .mh-root section{padding:0}
-    .mh-root{--b:#0F518F;--nv:#082C4E;--c2:#C2C2C2;--ink:#FAFAFA;--card:rgba(8,44,78,.03);--edge:rgba(15,81,143,.8);
+    .mh-root{--b:#0F518F;--nv:#082C4E;--c2:#C2C2C2;--ink:#FAFAFA;--card:rgba(8,44,78,.03);--edge:rgba(255,255,255,.26);--edge2:rgba(255,255,255,.16);
       position:relative;width:1216px;
       font-family:Roboto,system-ui,sans-serif;color:var(--ink);letter-spacing:0;line-height:1.5;font-size:16px}
     .mh-root :is(h2,h3,h4,h5,h6){color:var(--ink);letter-spacing:0;line-height:1.2;font-weight:300;margin:0}
@@ -545,7 +545,7 @@ window.STORIES["mehrino"] = {
     .mh-subject h4 b{font-weight:700}
     .mh-subject img{position:absolute;left:2px;right:2px;bottom:0;width:calc(100% - 4px);height:auto}
     .mh-desc{padding:128px 18px 0 19px;color:var(--c2)}
-    .mh-dnum{position:absolute;z-index:1;left:17px;top:24px;font:80px/1 "Rammetto One",sans-serif;color:var(--c2);letter-spacing:-.02em;pointer-events:none}
+    .mh-dnum{position:absolute;z-index:0;left:17px;top:24px;font:80px/1 "Rammetto One",sans-serif;color:rgba(194,194,194,.14);letter-spacing:-.02em;pointer-events:none}
     .mh-dnum small{font-size:50px}
     .mh-desc h4{position:absolute;left:26px;top:76px;font-size:30px;line-height:35px!important;color:var(--c2)!important;white-space:nowrap}
     .mh-desc h4 b{font-weight:700}
@@ -568,7 +568,7 @@ window.STORIES["mehrino"] = {
     .mh-who{display:block;font-size:12px;color:var(--c2);margin-top:8px}
     .mh-ins-grid h6{font-size:20px;line-height:23px!important;margin:10px 0 9px!important}
     .mh-ins-grid h6 b{font-weight:700}
-    .mh-ibox{background:rgba(8,44,78,.06);border-radius:20px;padding:23px 14px 14px 18px;font-size:10px;line-height:1.5;color:var(--c2)}
+    .mh-ibox{background:rgba(8,44,78,.06);border:1px solid var(--edge2);border-radius:20px;padding:23px 14px 14px 18px;font-size:10px;line-height:1.5;color:var(--c2)}
     .mh-ibox.pain{min-height:227px;margin-bottom:9px}
     .mh-ibox.pain + h6{margin-top:0!important}
     .mh-ibox:not(.pain){min-height:98px;padding-top:11px}
@@ -610,23 +610,23 @@ window.STORIES["mehrino"] = {
     .mh-prep{display:grid;grid-template-columns:repeat(2,minmax(0,416px));justify-content:center;column-gap:40px;row-gap:40px;margin-top:42px}
     .mh-prep h5{text-align:center;font-size:16px;line-height:19px!important;color:var(--c2)!important;margin-bottom:16px!important}
     .mh-prep h5 b{font-weight:800}
-    .mh-pq{height:calc(100% - 35px);background:rgba(8,44,78,.04);border:1px solid rgba(8,44,78,.3);border-radius:20px;padding:15px 10px 15px 10px;font-size:12px;line-height:18px;color:var(--c2);text-align:justify}
+    .mh-pq{height:calc(100% - 35px);background:rgba(8,44,78,.04);border:1px solid var(--edge2);border-radius:20px;padding:15px 10px 15px 10px;font-size:12px;line-height:18px;color:var(--c2);text-align:justify}
     .mh-pq ul{text-align:left;padding:10px 6px 0}
     .mh-prep > div:nth-child(-n+2) .mh-pq{min-height:307px}
     .mh-prep > div:nth-child(n+3) .mh-pq{min-height:179px}
     .mh-ctitle.hmw{margin-top:113px}
     .mh-hmwq{display:flex;flex-direction:column;align-items:center;gap:12px;margin-top:30px}
-    .mh-hmwq p{width:min(730px,100%);min-height:70px;display:grid;place-items:center;padding:12px 40px;background:rgba(8,44,78,.04);border:1px solid rgba(8,44,78,.3);border-radius:10px;font-size:14px;line-height:21px;text-align:center}
+    .mh-hmwq p{width:min(730px,100%);min-height:70px;display:grid;place-items:center;padding:12px 40px;background:rgba(8,44,78,.04);border:1px solid var(--edge2);border-radius:10px;font-size:14px;line-height:21px;text-align:center}
     .mh-ctitle.ps{margin-top:59px}
     .mh-ps{display:flex;flex-direction:column;align-items:center;gap:16px;margin-top:40px}
-    .mh-ps p{width:min(897px,100%);min-height:93px;display:grid;place-items:center;padding:12px 27px;background:rgba(8,44,78,.05);border-radius:10px;font-size:16px;font-weight:500;line-height:24px;text-align:center}
+    .mh-ps p{width:min(897px,100%);min-height:93px;display:grid;place-items:center;padding:12px 27px;background:rgba(8,44,78,.05);border:1px solid var(--edge2);border-radius:10px;font-size:16px;font-weight:500;line-height:24px;text-align:center}
 
     /* 02 personas */
     .mh-personas{margin-top:91px}
     .mh-personas > .mh-ctitle ~ .mh-ctitle{margin-top:150px}
     .mh-persona{display:grid;grid-template-columns:419fr 272fr 419fr;gap:16px;margin-top:28px}
     .mh-pcol{display:flex;flex-direction:column;gap:8px}
-    .mh-pbox{background:rgba(8,44,78,.05);border:1px solid rgba(8,44,78,.3);border-radius:20px;padding:10px 18px 14px 10px;font-size:14px;line-height:21px;color:var(--c2)}
+    .mh-pbox{background:rgba(8,44,78,.05);border:1px solid var(--edge2);border-radius:20px;padding:10px 18px 14px 10px;font-size:14px;line-height:21px;color:var(--c2)}
     .mh-pcol .mh-pbox:last-child{flex:1}
     .mh-root .mh-pbox h5,.mh-usecase h5,.mh-emp h5,.mh-pg h5{font-size:20px;line-height:23px;text-align:center;margin-bottom:10px}
     .mh-facts{padding-left:7px}
@@ -637,7 +637,7 @@ window.STORIES["mehrino"] = {
     .mh-emps > .mh-ctitle ~ .mh-ctitle{margin-top:164px}
     .mh-emp{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:22px;margin-top:73px}
     .mh-emp h5{margin-bottom:21px!important}
-    .mh-emp-box{min-height:263px;background:rgba(8,44,78,.05);border-radius:20px;padding:29px 22px 20px 25px;font-size:12px;line-height:18px;color:var(--c2)}
+    .mh-emp-box{min-height:263px;background:rgba(8,44,78,.05);border:1px solid var(--edge2);border-radius:20px;padding:29px 22px 20px 25px;font-size:12px;line-height:18px;color:var(--c2)}
     .mh-pg{display:grid;grid-template-columns:1fr 1fr;gap:28px;margin-top:21px}
     .mh-pg .mh-card{display:flex;align-items:center;gap:24px;min-height:113px;padding:16px 26px 16px 33px;background:rgba(8,44,78,.05);font-size:12px;line-height:15px;color:var(--c2)}
     .mh-pg .mh-card h5{margin:0!important;flex:none;width:60px;text-align:left}
@@ -646,7 +646,7 @@ window.STORIES["mehrino"] = {
 
     /* 03 define */
     .mh-hmw{display:grid;grid-template-columns:repeat(2,minmax(0,425px));justify-content:center;gap:24px 17px;margin-top:85px}
-    .mh-hmw > div{min-height:177px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:14px 22px;background:rgba(8,44,78,.05);border-radius:10px;text-align:center}
+    .mh-hmw > div{min-height:177px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:14px 22px;background:rgba(8,44,78,.05);border:1px solid var(--edge2);border-radius:10px;text-align:center}
     .mh-hmw > div:last-child:nth-child(odd){grid-column:1 / -1;justify-self:center;width:min(425px,100%)}
     .mh-hmw b{font-size:12px;font-weight:700;line-height:14px}
     .mh-hmw p{font-size:10.5px;line-height:13px;color:var(--c2);margin-bottom:6px}
@@ -666,16 +666,16 @@ window.STORIES["mehrino"] = {
         repeating-linear-gradient(90deg,transparent 0 65px,var(--b) 65px 66.5px) 9px calc(100% - 15px)/100% 7px no-repeat}
     .mh-quads::before{content:"";position:absolute;left:5px;top:-2px;border:4.5px solid transparent;border-bottom:7px solid var(--b);border-top:0}
     .mh-quads::after{content:"";position:absolute;right:-2px;bottom:10.5px;border:4.5px solid transparent;border-left:7px solid var(--b);border-right:0}
-    .mh-quads > div{background:rgba(8,44,78,.05);border:1px solid rgba(8,44,78,.3);border-radius:20px;padding:28px 32px;display:flex;flex-direction:column;gap:18px;font-size:12px;line-height:18px;text-align:center}
+    .mh-quads > div{background:rgba(8,44,78,.05);border:1px solid var(--edge2);border-radius:20px;padding:28px 32px;display:flex;flex-direction:column;gap:18px;font-size:12px;line-height:18px;text-align:center}
     .mh-quads > div:nth-child(2){gap:10px}
     .mh-quads > div:nth-child(4){padding-top:36px}
     .mh-xlab{display:flex;justify-content:space-between;padding-left:21px;margin-top:-6px;font-size:16px;line-height:25px}
     .mh-ctitle.sel{margin-top:95px}
     .mh-matrix + .mh-ctitle + .mh-brace,.mh-ctitle.sel + .mh-brace{margin:17px auto 0}
-    .mh-selected{width:min(819px,100%);min-height:110px;display:grid;place-items:center;margin:17px auto 0;padding:16px clamp(16px,13vw,148px);background:rgba(8,44,78,.05);border-radius:20px;font-size:16px;line-height:24px;text-align:center}
+    .mh-selected{width:min(819px,100%);min-height:110px;display:grid;place-items:center;margin:17px auto 0;padding:16px clamp(16px,13vw,148px);background:rgba(8,44,78,.05);border:1px solid var(--edge2);border-radius:20px;font-size:16px;line-height:24px;text-align:center}
 
     /* 05 style guide */
-    .mh-sg{margin:105px 0 0 59px;width:calc(100% - 26px);background:rgba(8,44,78,.03);padding:14px 61px 40px;font-family:Inter,sans-serif}
+    .mh-sg{margin:105px 0 0 59px;width:calc(100% - 26px);background:rgba(8,44,78,.03);border:1px solid var(--edge2);border-radius:20px;padding:14px 61px 40px;font-family:Inter,sans-serif}
     .mh-sg + .mh-sg{margin-top:40px}
     .mh-sg h4{font:700 35px/63px Inter,sans-serif!important}
     .mh-sg-sub{font:300 15px/27px Inter,sans-serif;color:var(--c2)}
